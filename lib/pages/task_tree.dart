@@ -17,7 +17,9 @@ class TaskTreePage extends StatelessWidget {
       body: KeyboardListener(
         focusNode: FocusNode(),
         autofocus: true,
-        child: const DragAndDropTreeView(),
+        child: DragAndDropTreeView(
+          onAddPressed: (task) async => await createTask(context, task.id),
+        ),
         onKeyEvent: (event) async {
           if (event.logicalKey == LogicalKeyboardKey.space) {
             await createTask(context);
@@ -31,7 +33,7 @@ class TaskTreePage extends StatelessWidget {
     );
   }
 
-  Future<void> createTask(BuildContext context) async {
+  Future<void> createTask(BuildContext context, [int? parentId]) async {
     var formResult = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       builder: (_) => CreateTaskForm(),
@@ -40,6 +42,6 @@ class TaskTreePage extends StatelessWidget {
       return;
     }
     var tree = Provider.of<TreeStorage>(context, listen: false);
-    await tree.createTask(formResult['title']);
+    await tree.createTask(formResult['title'], parentId);
   }
 }

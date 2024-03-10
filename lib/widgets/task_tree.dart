@@ -5,30 +5,15 @@ import 'package:todoer/models/storage.dart';
 import 'package:todoer/models/task.dart';
 
 import 'task_tree_tile.dart';
-
-extension on TreeDragAndDropDetails<Task> {
-  /// Splits the target node's height in three and checks the vertical offset
-  /// of the dragging node, applying the appropriate callback.
-  T mapDropPosition<T>({
-    required T Function() whenAbove,
-    required T Function() whenInside,
-    required T Function() whenBelow,
-  }) {
-    final double oneThirdOfTotalHeight = targetBounds.height * 0.3;
-    final double pointerVerticalOffset = dropPosition.dy;
-
-    if (pointerVerticalOffset < oneThirdOfTotalHeight) {
-      return whenAbove();
-    } else if (pointerVerticalOffset < oneThirdOfTotalHeight * 2) {
-      return whenInside();
-    } else {
-      return whenBelow();
-    }
-  }
-}
+import 'utils.dart';
 
 class DragAndDropTreeView extends StatefulWidget {
-  const DragAndDropTreeView({super.key});
+  const DragAndDropTreeView({
+    super.key,
+    required this.onAddPressed,
+  });
+
+  final void Function(Task) onAddPressed;
 
   @override
   State<DragAndDropTreeView> createState() => _DragAndDropTreeViewState();
@@ -72,7 +57,8 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
     Task? newParent;
     int newIndex = 0;
 
-    details.mapDropPosition(
+    mapDropPosition(
+      details,
       whenAbove: () {
         // Insert the dragged node as the previous sibling of the target node.
         newParent = details.targetNode.parent;
@@ -120,81 +106,13 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
           borderSide: borderSide,
           onNodeAccepted: onNodeAccepted,
           onFolderPressed: () => treeController!.toggleExpansion(entry.node),
-          storage: storage,
+          onCheckboxPressed: (task, value) async =>
+              await storage.makeTaskDone(entry.node.id, value),
+          onAddPressed: widget.onAddPressed,
+          onDeletePressed: (task) async => await storage.removeTask(task.id),
         );
       },
-      duration: const Duration(milliseconds: 300),
-    );
-  }
-}
-
-class DragAndDropTreeTile extends StatelessWidget {
-  const DragAndDropTreeTile({
-    super.key,
-    required this.entry,
-    required this.onNodeAccepted,
-    this.borderSide = BorderSide.none,
-    this.onFolderPressed,
-    required this.storage,
-  });
-
-  final TreeEntry<Task> entry;
-  final TreeDragTargetNodeAccepted<Task> onNodeAccepted;
-  final BorderSide borderSide;
-  final VoidCallback? onFolderPressed;
-  final TreeStorage storage;
-
-  @override
-  Widget build(BuildContext context) {
-    // var storage = Provider.of<TreeStorage>(context, listen: false);
-    return TreeDragTarget<Task>(
-      node: entry.node,
-      onNodeAccepted: onNodeAccepted,
-      builder: (BuildContext context, TreeDragAndDropDetails<Task>? details) {
-        Decoration? decoration;
-
-        if (details != null) {
-          // Add a border to indicate in which portion of the target's height
-          // the dragging node will be inserted.
-          decoration = BoxDecoration(
-            border: details.mapDropPosition(
-              whenAbove: () => Border(top: borderSide),
-              whenInside: () => Border.fromBorderSide(borderSide),
-              whenBelow: () => Border(bottom: borderSide),
-            ),
-          );
-        }
-
-        return TreeDraggable<Task>(
-          node: entry.node,
-          childWhenDragging: Opacity(
-            opacity: .5,
-            child: IgnorePointer(
-              child: TreeTile(
-                entry: entry,
-                storage: storage,
-              ),
-            ),
-          ),
-          feedback: IntrinsicWidth(
-            child: Material(
-              elevation: 4,
-              child: TreeTile(
-                entry: entry,
-                storage: storage,
-                showIndentation: false,
-                onFolderPressed: () {},
-              ),
-            ),
-          ),
-          child: TreeTile(
-            entry: entry,
-            storage: storage,
-            onFolderPressed: entry.node.isLeaf ? null : onFolderPressed,
-            decoration: decoration,
-          ),
-        );
-      },
+      duration: const Duration(milliseconds: 200),
     );
   }
 }
