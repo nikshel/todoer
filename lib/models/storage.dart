@@ -62,7 +62,19 @@ class TreeStorage extends ChangeNotifier {
     await _db.update(
       TASKS_TABLE,
       {'done': done ? 1 : 0},
-      where: 'id = ?',
+      where: done
+          ? '''id IN (
+            WITH RECURSIVE
+            subtasks(task_id) AS (
+              SELECT ?
+              UNION ALL
+              SELECT tasks.id
+              FROM subtasks
+              JOIN tasks ON tasks.parent_id = subtasks.task_id
+            )
+            SELECT task_id FROM subtasks
+          )'''
+          : 'id = ?',
       whereArgs: [taskId],
     );
 

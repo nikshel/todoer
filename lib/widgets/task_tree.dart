@@ -230,7 +230,13 @@ class TreeTile extends StatelessWidget {
                 await storage.makeTaskDone(entry.node.id, value!),
           ),
           Expanded(
-            child: Text('Node ${entry.node.title} (${entry.node.id})'),
+            child: Text(
+              entry.node.title,
+              style: TextStyle(
+                  decoration:
+                      entry.node.done ? TextDecoration.lineThrough : null,
+                  color: entry.node.done ? Colors.grey : null),
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.delete),
