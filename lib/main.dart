@@ -9,19 +9,19 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
 
-  var db = await openDatabase();
-  var storage = TreeStorage(db);
-
   windowManager.waitUntilReadyToShow(
     const WindowOptions(
       size: Size(400, 800),
-      minimumSize: Size(400, 800),
+      minimumSize: Size(400, 400),
     ),
     () async {
       await windowManager.show();
       await windowManager.focus();
     },
   );
+
+  var db = await openDatabase();
+  var storage = TreeStorage(db);
 
   runApp(MyApp(storage: storage));
 }
@@ -31,7 +31,6 @@ class MyApp extends StatelessWidget {
 
   const MyApp({super.key, required this.storage});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -45,14 +44,4 @@ class MyApp extends StatelessWidget {
           child: const TaskTreePage(),
         ));
   }
-
-  // static TreeStorage makeTreeStorage() {
-  //   var tree = TreeStorage();
-  //   var t1 = tree.createTask("Root");
-  //   var t2 = tree.createTask("Child 1", t1);
-  //   tree.createTask("Child 2", t2);
-  //   tree.createTask("Child 23", t1);
-
-  //   return tree;
-  // }
 }

@@ -25,6 +25,7 @@ class CreateTaskForm extends StatelessWidget {
                 validator: FormBuilderValidators.required(),
                 textInputAction: TextInputAction.send,
                 autofocus: true,
+                valueTransformer: (value) => value?.trim(),
                 onSubmitted: (_) => submit(context),
               ),
               Container(

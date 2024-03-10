@@ -36,7 +36,7 @@ class TaskTreePage extends StatelessWidget {
       context: context,
       builder: (_) => CreateTaskForm(),
     );
-    if (formResult == null) {
+    if (formResult == null || !context.mounted) {
       return;
     }
     var tree = Provider.of<TreeStorage>(context, listen: false);

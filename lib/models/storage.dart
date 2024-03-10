@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:todoer/models/task.dart';
 
-const TASKS_TABLE = 'tasks';
+const tasksTable = 'tasks';
 
 class TreeStorage extends ChangeNotifier {
   final Database _db;
@@ -12,7 +12,7 @@ class TreeStorage extends ChangeNotifier {
   TreeStorage(this._db);
 
   Future<List<Task>> getRoots() async {
-    var res = await _db.query(TASKS_TABLE, orderBy: 'parent_id, idx');
+    var res = await _db.query(tasksTable, orderBy: 'parent_id, idx');
 
     var tasksById = <int, Task>{};
     for (var rawTask in res) {
@@ -40,14 +40,14 @@ class TreeStorage extends ChangeNotifier {
   Future<void> createTask(String title, [int? parentId]) async {
     await _db.transaction((txn) async {
       var res = await txn.query(
-        TASKS_TABLE,
+        tasksTable,
         columns: ['MAX(idx) AS max_idx'],
         where: 'parent_id IS ?',
         whereArgs: [parentId],
       );
       int maxIdx = (res[0]['max_idx'] as int?) ?? -1;
 
-      await txn.insert(TASKS_TABLE, {
+      await txn.insert(tasksTable, {
         'title': title,
         'done': 0,
         'parent_id': parentId,
@@ -60,7 +60,7 @@ class TreeStorage extends ChangeNotifier {
 
   Future<void> makeTaskDone(int taskId, bool done) async {
     await _db.update(
-      TASKS_TABLE,
+      tasksTable,
       {'done': done ? 1 : 0},
       where: done
           ? '''id IN (
@@ -84,7 +84,7 @@ class TreeStorage extends ChangeNotifier {
   Future<void> removeTask(int taskId) async {
     await _db.transaction((txn) async {
       var res = await txn.rawQuery('''
-        DELETE FROM $TASKS_TABLE
+        DELETE FROM $tasksTable
         WHERE id = ?
         RETURNING parent_id, idx
       ''', [taskId]);
@@ -92,7 +92,7 @@ class TreeStorage extends ChangeNotifier {
       var idx = res[0]['idx'] as int;
 
       await txn.rawUpdate('''
-        UPDATE $TASKS_TABLE
+        UPDATE $tasksTable
         SET idx = idx - 1
         WHERE parent_id IS ? AND idx > ?
       ''', [parentId, idx]); // todo shifts
@@ -103,73 +103,52 @@ class TreeStorage extends ChangeNotifier {
   Future<void> moveTask(int taskId, int? newParentId, int newIdx) async {
     _db.transaction((txn) async {
       var res = await txn.query(
-        TASKS_TABLE,
+        tasksTable,
         columns: ['parent_id', 'idx'],
         where: 'id = ?',
         whereArgs: [taskId],
       );
       var currentParentId = res[0]['parent_id'] as int?;
       var currentIdx = res[0]['idx'] as int;
-
-      // var batch = txn.batch();
-      // batch
-      print('START $taskId $newIdx');
-      var all = await txn.query(TASKS_TABLE);
-      for (var element in all) {
-        print(element);
-      }
-
-      await txn.rawUpdate('''
-          UPDATE $TASKS_TABLE
-          SET idx = -1
-          WHERE id = ?
-        ''', [taskId]);
-      await txn.rawUpdate('''
-          UPDATE $TASKS_TABLE
-          SET idx = idx - 1000000
-          WHERE parent_id IS ? AND idx > ?
-          ''', [currentParentId, currentIdx]);
-
-      await txn.rawUpdate('''
-          UPDATE $TASKS_TABLE
-          SET idx = idx + 999999
-          WHERE parent_id IS ? AND idx < -1
-          ''', [currentParentId]);
-      print('after -1');
-      all = await txn.query(TASKS_TABLE);
-      for (var element in all) {
-        print(element);
-      }
-
       if (newParentId == currentParentId && currentIdx < newIdx) {
         newIdx--;
       }
 
-      await txn.rawUpdate('''
-          UPDATE $TASKS_TABLE
-          SET idx = idx + 1000000
-          WHERE parent_id IS ? AND idx >= ?
-          ''', [newParentId, newIdx]);
-
-      await txn.rawUpdate('''
-          UPDATE $TASKS_TABLE
-          SET idx = idx - 999999
-          WHERE parent_id IS ? AND idx >= 1000000
-          ''', [newParentId]);
-      // await batch.commit();
-
-      print('after +1');
-      all = await txn.query(TASKS_TABLE);
-      for (var element in all) {
-        print(element);
-      }
-
-      await txn.rawUpdate('''
-        UPDATE $TASKS_TABLE
-        SET parent_id = ?, idx = ?
-        WHERE id = ?
-        ''', [newParentId, newIdx, taskId]);
+      var batch = txn.batch();
+      batch
+        ..rawUpdate('''
+            UPDATE $tasksTable
+            SET idx = -1
+            WHERE id = ?
+          ''', [taskId])
+        ..rawUpdate('''
+            UPDATE $tasksTable
+            SET idx = idx - 1000000
+            WHERE parent_id IS ? AND idx > ?
+            ''', [currentParentId, currentIdx])
+        ..rawUpdate('''
+            UPDATE $tasksTable
+            SET idx = idx + 999999
+            WHERE parent_id IS ? AND idx < -1
+            ''', [currentParentId])
+        ..rawUpdate('''
+            UPDATE $tasksTable
+            SET idx = idx + 1000000
+            WHERE parent_id IS ? AND idx >= ?
+          ''', [newParentId, newIdx])
+        ..rawUpdate('''
+            UPDATE $tasksTable
+            SET idx = idx - 999999
+            WHERE parent_id IS ? AND idx >= 1000000
+            ''', [newParentId])
+        ..rawUpdate('''
+            UPDATE $tasksTable
+            SET parent_id = ?, idx = ?
+            WHERE id = ?
+            ''', [newParentId, newIdx, taskId]);
+      await batch.apply();
     }, exclusive: true);
+
     notifyListeners();
   }
 
