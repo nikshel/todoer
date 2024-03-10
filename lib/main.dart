@@ -6,11 +6,12 @@ import 'package:todoer/pages/task_tree.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await windowManager.ensureInitialized();
+
   var db = await openDatabase();
   var storage = TreeStorage(db);
 
-  WidgetsFlutterBinding.ensureInitialized();
-  await windowManager.ensureInitialized();
   windowManager.waitUntilReadyToShow(
     const WindowOptions(
       size: Size(400, 800),
