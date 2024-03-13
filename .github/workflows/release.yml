@@ -5,9 +5,8 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,24 +16,47 @@ jobs:
           flutter-version: '3.19.2'
           channel: 'stable'
           cache: true 
-
       - name: Install dependencies
         run: flutter pub get
-
       - name: Build 
         run: flutter build windows --release
-
       - name: Create archieve
-        run: Compress-Archive -Path ./build/windows/x64/runner/Release/* -Destination windows.zip
-
+        run: Compress-Archive -Path ./build/windows/x64/runner/Release/* -Destination todoer-windows.zip
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows-release
-          path: windows.zip
+          name: release-windows
+          path: todoer-windows.zip
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.2'
+          channel: 'stable'
+          cache: true 
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Build 
+        run: flutter build macos --release
+      - name: Install create-dmg
+        run: HOMEBREW_NO_AUTO_UPDATE=1 brew install create-dmg
+      - name: Create dmg
+        run: create-dmg todoer-macos.dmg /build/macos/Build/Products/Release/todoer.app
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: todoer-macos.dmg
   
   release:
-    needs: build
+    needs:
+      - build-windows
+      - build-macos
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -42,7 +64,8 @@ jobs:
       - name: Download windows-release
         uses: actions/download-artifact@v4
         with:
-          name: windows-release
+          merge-multiple: true
+          pattern: release-*
 
       - name: Get next version
         uses: reecetech/version-increment@2023.9.3
@@ -61,12 +84,23 @@ jobs:
           tag_name: ${{ steps.version.outputs.version }}
           release_name: Release ${{ steps.version.outputs.version }}
 
-      - name: Upload assets
+      - name: Upload windows asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: ./windows.zip
-          asset_name: windows.zip
+          asset_path: ./todoer-windows.zip
+          asset_name: todoer-windows.zip
           asset_content_type: application/zip
+
+      - name: Upload macos assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./todoer-macos.dmg
+          asset_name: todoer-macos.dmg
+          asset_content_type: application/octet-stream
+          
