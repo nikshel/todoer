@@ -45,6 +45,7 @@ jobs:
           name: windows-release
   
       - name: Create release
+        id: create-release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -53,7 +54,6 @@ jobs:
           release_name: Release 0.1.0
 
       - name: Upload assets
-        id: create-release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
