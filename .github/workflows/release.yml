@@ -9,8 +9,10 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup flutter
+        uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.2'
           channel: 'stable'
@@ -34,6 +36,8 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Download windows-release
         uses: actions/download-artifact@v4
@@ -44,9 +48,10 @@ jobs:
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          release_name: Release 0.1.0
         with:
           tag_name: 0.1.0
+          release_name: Release 0.1.0
+
       - name: Upload assets
         id: create-release
         uses: actions/upload-release-asset@v1
