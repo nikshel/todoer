@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.2'
+          channel: 'stable'
+          cache: true 
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build 
+        run: flutter build windows --release
+
+      - name: Create archieve
+        run: Compress-Archive -Path ./build/windows/x64/runner/Release/* -Destination windows.zip
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: windows.zip
+  
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download windows-release
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-release
+  
+      - name: Create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          release_name: Release 0.1.0
+        with:
+          tag_name: 0.1.0
+      - name: Upload assets
+        id: create-release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./windows.zip
+          asset_name: windows.zip
+          asset_content_type: application/zip
