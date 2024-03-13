@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_fancy_tree_view/flutter_fancy_tree_view.dart';
-import 'package:todoer/models/storage.dart';
 import 'package:todoer/models/task.dart';
 
 import 'utils.dart';
@@ -49,6 +48,7 @@ class DragAndDropTreeTile extends StatelessWidget {
 
         return TreeDraggable<Task>(
           node: entry.node,
+          longPressDelay: Duration(milliseconds: 150),
           childWhenDragging: Opacity(
             opacity: .5,
             child: IgnorePointer(
@@ -106,28 +106,32 @@ class TreeTile extends StatelessWidget {
       padding: const EdgeInsetsDirectional.only(end: 8),
       child: Row(
         children: [
-          FolderButton(
-            openedIcon: const Icon(Icons.expand_more),
-            closedIcon: const Icon(Icons.chevron_right),
-            isOpen: entry.node.isLeaf ? null : entry.isExpanded,
-            onPressed: onFolderPressed,
-          ),
           Checkbox(
-            // shape: CircleBorder(),
+            shape: const CircleBorder(),
             value: entry.node.done,
             onChanged: onCheckboxPressed == null
                 ? null
                 : (value) => onCheckboxPressed!(entry.node, value!),
           ),
           Expanded(
-            child: Text(
-              entry.node.title,
-              style: TextStyle(
-                  decoration:
-                      entry.node.done ? TextDecoration.lineThrough : null,
-                  color: entry.node.done ? Colors.grey : null),
+            child: GestureDetector(
+              onTap: onFolderPressed,
+              child: Text(
+                entry.node.title,
+                style: TextStyle(
+                    decoration:
+                        entry.node.done ? TextDecoration.lineThrough : null,
+                    color: entry.node.done ? Colors.grey : null),
+              ),
             ),
           ),
+          if (!entry.node.isLeaf)
+            FolderButton(
+              openedIcon: const Icon(Icons.expand_more),
+              closedIcon: const Icon(Icons.chevron_right),
+              isOpen: entry.node.isLeaf ? null : entry.isExpanded,
+              onPressed: onFolderPressed,
+            ),
           IconButton(
             icon: const Icon(Icons.add),
             onPressed:

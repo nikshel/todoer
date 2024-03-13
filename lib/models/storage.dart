@@ -74,8 +74,18 @@ class TreeStorage extends ChangeNotifier {
             )
             SELECT task_id FROM subtasks
           )'''
-          : 'id = ?',
-      whereArgs: [taskId],
+          : '''id IN (
+            WITH RECURSIVE
+            subtasks(task_id, parent_id) AS (
+              SELECT ?, (SELECT parent_id FROM tasks WHERE id = ?)
+              UNION ALL
+              SELECT tasks.id, tasks.parent_id
+              FROM subtasks
+              JOIN tasks ON tasks.id = subtasks.parent_id
+            )
+            SELECT task_id FROM subtasks
+          )''',
+      whereArgs: done ? [taskId] : [taskId, taskId],
     );
 
     notifyListeners();
@@ -146,7 +156,7 @@ class TreeStorage extends ChangeNotifier {
             SET parent_id = ?, idx = ?
             WHERE id = ?
             ''', [newParentId, newIdx, taskId]);
-      await batch.apply();
+      await batch.apply(noResult: true);
     }, exclusive: true);
 
     notifyListeners();

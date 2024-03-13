@@ -108,7 +108,10 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
           onFolderPressed: () => treeController!.toggleExpansion(entry.node),
           onCheckboxPressed: (task, value) async =>
               await storage.makeTaskDone(entry.node.id, value),
-          onAddPressed: widget.onAddPressed,
+          onAddPressed: (task) {
+            treeController!.expand(task);
+            widget.onAddPressed(task);
+          },
           onDeletePressed: (task) async => await storage.removeTask(task.id),
         );
       },
