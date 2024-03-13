@@ -43,6 +43,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: windows-release
+
+      - name: Get next version
+        uses: reecetech/version-increment@2023.9.3
+        id: version
+        with:
+          scheme: semver
+          increment: minor
+          use_api: true
   
       - name: Create release
         id: create-release
@@ -50,8 +58,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: 0.1.0
-          release_name: Release 0.1.0
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: Release ${{ steps.version.outputs.version }}
 
       - name: Upload assets
         uses: actions/upload-release-asset@v1
