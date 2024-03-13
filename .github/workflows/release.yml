@@ -46,7 +46,7 @@ jobs:
       - name: Install create-dmg
         run: HOMEBREW_NO_AUTO_UPDATE=1 brew install create-dmg
       - name: Create dmg
-        run: create-dmg todoer-macos.dmg /build/macos/Build/Products/Release/todoer.app
+        run: create-dmg todoer-macos.dmg build/macos/Build/Products/Release/todoer.app
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
