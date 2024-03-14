@@ -10,14 +10,13 @@ class CreateTaskForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 200,
       padding: const EdgeInsets.all(20),
       child: Center(
         child: FormBuilder(
           key: _formKey,
           autovalidateMode: AutovalidateMode.onUserInteraction,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               FormBuilderTextField(
                 name: 'title',
@@ -27,6 +26,11 @@ class CreateTaskForm extends StatelessWidget {
                 autofocus: true,
                 valueTransformer: (value) => value?.trim(),
                 onSubmitted: (_) => submit(context),
+              ),
+              FormBuilderCheckbox(
+                name: 'isProject',
+                title: const Text('Сделать проектом'),
+                initialValue: false,
               ),
               Container(
                 alignment: Alignment.bottomRight,

@@ -1,22 +1,7 @@
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart' as p;
-
-final List<String> migrations = [
-  '''
-  CREATE TABLE tasks (
-    id INTEGER PRIMARY KEY,
-    title TEXT NOT NULL,
-    done INTEGER NOT NULL,
-    parent_id INTEGER,
-    idx INTEGER,
-
-    FOREIGN KEY(parent_id) REFERENCES tasks(id) ON DELETE CASCADE
-  ) STRICT;
-  
-  CREATE UNIQUE INDEX ux_tasks_parent_idx ON tasks(COALESCE(parent_id, -1), idx);
-  '''
-];
+import 'migrations.dart';
 
 Future<Database> openDatabase() async {
   sqfliteFfiInit();

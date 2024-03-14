@@ -48,7 +48,7 @@ class DragAndDropTreeTile extends StatelessWidget {
 
         return TreeDraggable<Task>(
           node: entry.node,
-          longPressDelay: Duration(milliseconds: 150),
+          longPressDelay: const Duration(milliseconds: 150),
           childWhenDragging: Opacity(
             opacity: .5,
             child: IgnorePointer(
@@ -113,6 +113,11 @@ class TreeTile extends StatelessWidget {
                 ? null
                 : (value) => onCheckboxPressed!(entry.node, value!),
           ),
+          if (entry.node.isProject)
+            IconButton(
+              icon: const Icon(Icons.folder),
+              onPressed: () {},
+            ),
           Expanded(
             child: GestureDetector(
               onTap: onFolderPressed,

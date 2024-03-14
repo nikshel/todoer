@@ -2,6 +2,7 @@ class Task {
   final int id;
   final String title;
   final bool done;
+  final bool isProject;
 
   Task? parent; // TODO late final
   final int index;
@@ -12,6 +13,7 @@ class Task {
     required this.id,
     required this.title,
     required this.done,
+    required this.isProject,
     required this.index,
   });
 

@@ -42,6 +42,10 @@ class TaskTreePage extends StatelessWidget {
       return;
     }
     var tree = Provider.of<TreeStorage>(context, listen: false);
-    await tree.createTask(formResult['title'], parentId);
+    await tree.createTask(
+      title: formResult['title'],
+      isProject: formResult['isProject'],
+      parentId: parentId,
+    );
   }
 }
