@@ -5,6 +5,8 @@ import 'package:todoer/models/storage.dart';
 import 'package:todoer/pages/task_tree.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'pages/home.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
@@ -41,7 +43,7 @@ class MyApp extends StatelessWidget {
         ),
         home: ChangeNotifierProvider<TreeStorage>.value(
           value: storage,
-          child: const TaskTreePage(),
+          child: const MyHomePage(title: 'easy_sidemenu Demo'),
         ));
   }
 }
