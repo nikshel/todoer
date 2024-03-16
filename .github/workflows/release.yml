@@ -61,7 +61,19 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download windows-release
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get Commits since last release
+        id: changes
+        uses: simbo/changes-since-last-release-action@v1
+        with:
+          line-prefix: "* "
+          include-hashes: false
+
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           merge-multiple: true
@@ -73,7 +85,6 @@ jobs:
         with:
           scheme: semver
           increment: minor
-          use_api: true
   
       - name: Create release
         id: create-release
@@ -83,6 +94,7 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.version }}
           release_name: Release ${{ steps.version.outputs.version }}
+          body: ${{ steps.changes.outputs.log }}
 
       - name: Upload windows asset
         uses: actions/upload-release-asset@v1
@@ -94,7 +106,7 @@ jobs:
           asset_name: todoer-windows.zip
           asset_content_type: application/zip
 
-      - name: Upload macos assets
+      - name: Upload macos asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
