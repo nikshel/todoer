@@ -7,13 +7,19 @@ import 'package:todoer/models/task.dart';
 import 'task_tree_tile.dart';
 import 'utils.dart';
 
+bool allow(Task _) => true;
+
 class DragAndDropTreeView extends StatefulWidget {
   const DragAndDropTreeView({
     super.key,
+    this.isReadOnly = false,
+    this.shouldShow = allow,
     required this.onAddPressed,
   });
 
   final void Function(Task) onAddPressed;
+  final bool Function(Task) shouldShow;
+  final bool isReadOnly;
 
   @override
   State<DragAndDropTreeView> createState() => _DragAndDropTreeViewState();
@@ -34,15 +40,16 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
     if (treeController == null) {
       setState(() {
         treeController = TreeController<Task>(
-          roots: roots,
-          childrenProvider: (Task node) => node.children,
+          roots: roots.where(widget.shouldShow),
+          childrenProvider: (Task node) =>
+              node.children.where(widget.shouldShow),
           parentProvider: (Task node) => node.parent,
         );
         treeController!.expandAll();
       });
     } else {
       setState(() {
-        treeController!.roots = roots;
+        treeController!.roots = roots.where(widget.shouldShow);
       });
     }
   }
@@ -103,11 +110,14 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
       nodeBuilder: (BuildContext context, TreeEntry<Task> entry) {
         return DragAndDropTreeTile(
           entry: entry,
+          isReadOnly: widget.isReadOnly,
           borderSide: borderSide,
           onNodeAccepted: onNodeAccepted,
           onFolderPressed: () => treeController!.toggleExpansion(entry.node),
           onCheckboxPressed: (task, value) async =>
               await storage.makeTaskDone(entry.node.id, value),
+          onInWorkPressed: (task) async =>
+              await storage.makeTaskInWork(task.id, !task.isInWork),
           onAddPressed: (task) {
             treeController!.expand(task);
             widget.onAddPressed(task);

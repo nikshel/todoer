@@ -10,8 +10,10 @@ class DragAndDropTreeTile extends StatelessWidget {
     required this.entry,
     required this.onNodeAccepted,
     this.borderSide = BorderSide.none,
+    this.isReadOnly = false,
     required this.onFolderPressed,
     required this.onCheckboxPressed,
+    required this.onInWorkPressed,
     required this.onAddPressed,
     required this.onDeletePressed,
   });
@@ -19,8 +21,10 @@ class DragAndDropTreeTile extends StatelessWidget {
   final TreeEntry<Task> entry;
   final TreeDragTargetNodeAccepted<Task> onNodeAccepted;
   final BorderSide borderSide;
+  final bool isReadOnly;
   final VoidCallback? onFolderPressed;
   final void Function(Task, bool)? onCheckboxPressed;
+  final void Function(Task)? onInWorkPressed;
   final void Function(Task) onAddPressed;
   final void Function(Task) onDeletePressed;
 
@@ -54,6 +58,7 @@ class DragAndDropTreeTile extends StatelessWidget {
             child: IgnorePointer(
               child: TreeTile(
                 entry: entry,
+                isReadOnly: isReadOnly,
               ),
             ),
           ),
@@ -62,14 +67,17 @@ class DragAndDropTreeTile extends StatelessWidget {
               elevation: 4,
               child: TreeTile(
                 entry: entry,
+                isReadOnly: isReadOnly,
                 showIndentation: false,
               ),
             ),
           ),
           child: TreeTile(
             entry: entry,
+            isReadOnly: isReadOnly,
             onFolderPressed: entry.node.isLeaf ? null : onFolderPressed,
             onCheckboxPressed: onCheckboxPressed,
+            onInWorkPressed: onInWorkPressed,
             onAddPressed: onAddPressed,
             onDeletePressed: onDeletePressed,
             decoration: decoration,
@@ -84,8 +92,10 @@ class TreeTile extends StatelessWidget {
   const TreeTile({
     super.key,
     required this.entry,
+    this.isReadOnly = false,
     this.onFolderPressed,
     this.onCheckboxPressed,
+    this.onInWorkPressed,
     this.onAddPressed,
     this.onDeletePressed,
     this.decoration,
@@ -93,8 +103,10 @@ class TreeTile extends StatelessWidget {
   });
 
   final TreeEntry<Task> entry;
+  final bool isReadOnly;
   final VoidCallback? onFolderPressed;
   final void Function(Task, bool)? onCheckboxPressed;
+  final void Function(Task)? onInWorkPressed;
   final void Function(Task)? onAddPressed;
   final void Function(Task)? onDeletePressed;
   final Decoration? decoration;
@@ -137,17 +149,29 @@ class TreeTile extends StatelessWidget {
               isOpen: entry.node.isLeaf ? null : entry.isExpanded,
               onPressed: onFolderPressed,
             ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed:
-                onAddPressed == null ? null : () => onAddPressed!(entry.node),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: onDeletePressed == null
-                ? null
-                : () => onDeletePressed!(entry.node),
-          )
+          if (!entry.node.done)
+            IconButton(
+              icon: Icon(
+                Icons.play_arrow,
+                color: entry.node.isInWork ? Colors.blue : null,
+              ),
+              onPressed: onInWorkPressed == null
+                  ? null
+                  : () => onInWorkPressed!(entry.node),
+            ),
+          if (!isReadOnly)
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed:
+                  onAddPressed == null ? null : () => onAddPressed!(entry.node),
+            ),
+          if (!isReadOnly)
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: onDeletePressed == null
+                  ? null
+                  : () => onDeletePressed!(entry.node),
+            )
         ],
       ),
     );

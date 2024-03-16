@@ -8,7 +8,7 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  State createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
@@ -44,35 +44,27 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             items: [
               SideMenuItem(
-                title: 'Users',
+                title: 'В работе',
                 onTap: (index, _) {
                   sideMenu.changePage(index);
                 },
-                icon: const Icon(Icons.supervisor_account),
+                icon: const Icon(Icons.rowing),
               ),
               SideMenuItem(
                 title: 'Проекты',
                 onTap: (index, _) {
                   sideMenu.changePage(index);
                 },
-                icon: const Icon(Icons.file_copy_rounded),
+                icon: const Icon(Icons.format_list_bulleted),
               ),
             ],
           ),
           Expanded(
             child: PageView(
               controller: pageController,
-              children: [
-                Container(
-                  color: Colors.white,
-                  child: const Center(
-                    child: Text(
-                      'Users',
-                      style: TextStyle(fontSize: 35),
-                    ),
-                  ),
-                ),
-                const TaskTreePage(),
+              children: const [
+                TaskTreePage(inWork: true),
+                TaskTreePage(),
               ],
             ),
           ),

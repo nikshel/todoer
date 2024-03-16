@@ -63,34 +63,40 @@ class TreeStorage extends ChangeNotifier {
   }
 
   Future<void> makeTaskDone(int taskId, bool done) async {
+    var (query, args) = done
+        ? _getOwnWithChildrenIdsQuery(taskId)
+        : _getOwnWithParentsIdsQuery(taskId);
+
     await _db.update(
       tasksTable,
       {'done': done ? 1 : 0},
-      where: done
-          ? '''id IN (
-            WITH RECURSIVE
-            subtasks(task_id) AS (
-              SELECT ?
-              UNION ALL
-              SELECT tasks.id
-              FROM subtasks
-              JOIN tasks ON tasks.parent_id = subtasks.task_id
-            )
-            SELECT task_id FROM subtasks
-          )'''
-          : '''id IN (
-            WITH RECURSIVE
-            subtasks(task_id, parent_id) AS (
-              SELECT ?, (SELECT parent_id FROM tasks WHERE id = ?)
-              UNION ALL
-              SELECT tasks.id, tasks.parent_id
-              FROM subtasks
-              JOIN tasks ON tasks.id = subtasks.parent_id
-            )
-            SELECT task_id FROM subtasks
-          )''',
-      whereArgs: done ? [taskId] : [taskId, taskId],
+      where: 'id IN ($query)',
+      whereArgs: args,
     );
+
+    notifyListeners();
+  }
+
+  Future<void> makeTaskInWork(int taskId, bool inWork) async {
+    var (query, args) = inWork
+        ? _getOwnWithParentsIdsQuery(taskId)
+        : _getOwnWithChildrenIdsQuery(taskId);
+
+    await _db.update(
+      tasksTable,
+      {
+        'start_since_dt':
+            inWork ? DateTime.timestamp().toIso8601String() : null,
+      },
+      where:
+          'id IN ($query) AND start_since_dt ${inWork ? 'IS NULL' : 'IS NOT NULL'}',
+      whereArgs: args,
+    );
+
+    if (inWork) {
+      // TODO tx
+      await makeTaskDone(taskId, false);
+    }
 
     notifyListeners();
   }
@@ -166,12 +172,49 @@ class TreeStorage extends ChangeNotifier {
     notifyListeners();
   }
 
+  (String, List<Object?>) _getOwnWithChildrenIdsQuery(int taskId) {
+    return (
+      '''
+      WITH RECURSIVE
+      subtasks(task_id) AS (
+        SELECT ?
+        UNION ALL
+        SELECT tasks.id
+        FROM subtasks
+        JOIN tasks ON tasks.parent_id = subtasks.task_id
+      )
+      SELECT task_id FROM subtasks
+      ''',
+      [taskId],
+    );
+  }
+
+  (String, List<Object?>) _getOwnWithParentsIdsQuery(int taskId) {
+    return (
+      '''
+      WITH RECURSIVE
+      subtasks(task_id, parent_id) AS (
+        SELECT ?, (SELECT parent_id FROM tasks WHERE id = ?)
+        UNION ALL
+        SELECT tasks.id, tasks.parent_id
+        FROM subtasks
+        JOIN tasks ON tasks.id = subtasks.parent_id
+      )
+      SELECT task_id FROM subtasks
+      ''',
+      [taskId, taskId],
+    );
+  }
+
   Task _makeTask(Map<String, Object?> values) {
     return Task(
       id: values['id'] as int,
       title: values['title'] as String,
       isProject: values['is_project'] as int == 1,
       done: values['done'] as int == 1,
+      startSince: values['start_since_dt'] == null
+          ? null
+          : DateTime.parse(values['start_since_dt'] as String),
       index: values['idx'] as int,
     );
   }

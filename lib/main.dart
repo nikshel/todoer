@@ -15,7 +15,7 @@ void main() async {
     await windowManager.ensureInitialized();
     windowManager.waitUntilReadyToShow(
       const WindowOptions(
-        size: Size(400, 800),
+        size: Size(800, 800),
         minimumSize: Size(400, 400),
       ),
       () async {
