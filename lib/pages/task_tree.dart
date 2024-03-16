@@ -33,6 +33,7 @@ class TaskTreePage extends StatelessWidget {
   Future<void> createTask(BuildContext context, [int? parentId]) async {
     var formResult = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
+      isScrollControlled: true,
       builder: (_) => CreateTaskForm(),
     );
     if (formResult == null || !context.mounted) {

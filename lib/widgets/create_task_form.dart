@@ -10,37 +10,36 @@ class CreateTaskForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
-      child: Center(
-        child: FormBuilder(
-          key: _formKey,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              FormBuilderTextField(
-                name: 'title',
-                decoration: const InputDecoration(labelText: 'Название задачи'),
-                validator: FormBuilderValidators.required(),
-                textInputAction: TextInputAction.send,
-                autofocus: true,
-                valueTransformer: (value) => value?.trim(),
-                onSubmitted: (_) => submit(context),
+      padding: MediaQuery.of(context).viewInsets.add(const EdgeInsets.all(20)),
+      child: FormBuilder(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FormBuilderTextField(
+              name: 'title',
+              decoration: const InputDecoration(labelText: 'Название задачи'),
+              validator: FormBuilderValidators.required(),
+              textInputAction: TextInputAction.send,
+              autofocus: true,
+              valueTransformer: (value) => value?.trim(),
+              onSubmitted: (_) => submit(context),
+            ),
+            FormBuilderCheckbox(
+              name: 'isProject',
+              title: const Text('Сделать проектом'),
+              initialValue: false,
+            ),
+            Container(
+              alignment: Alignment.bottomRight,
+              child: FilledButton.tonal(
+                onPressed: () => submit(context),
+                child: const Text('Создать'),
               ),
-              FormBuilderCheckbox(
-                name: 'isProject',
-                title: const Text('Сделать проектом'),
-                initialValue: false,
-              ),
-              Container(
-                alignment: Alignment.bottomRight,
-                child: FilledButton.tonal(
-                  onPressed: () => submit(context),
-                  child: const Text('Создать'),
-                ),
-              )
-            ],
-          ),
+            )
+          ],
         ),
       ),
     );
