@@ -5,7 +5,21 @@ on:
     branches: [ "main" ]
 
 jobs:
+  get-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get next version
+        uses: reecetech/version-increment@2023.10.2
+        id: version
+        with:
+          scheme: semver
+          increment: minor
+          use_api: true
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
   build-windows:
+    needs: [get-version]
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -19,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Build 
-        run: flutter build windows --release
+        run: flutter build windows --release --build-name=${{ needs.get-version.outputs.version }}
       - name: Create archieve
         run: Compress-Archive -Path ./build/windows/x64/runner/Release/* -Destination todoer-windows.zip
       - name: Upload build artifact
@@ -29,6 +43,7 @@ jobs:
           path: todoer-windows.zip
 
   build-macos:
+    needs: [get-version]
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -42,7 +57,7 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Build 
-        run: flutter build macos --release
+        run: flutter build macos --release --build-name=${{ needs.get-version.outputs.version }}
       - name: Install create-dmg
         run: HOMEBREW_NO_AUTO_UPDATE=1 brew install create-dmg
       - name: Create dmg
@@ -55,6 +70,7 @@ jobs:
   
   release:
     needs:
+      - get-version
       - build-windows
       - build-macos
     runs-on: ubuntu-latest
@@ -78,13 +94,6 @@ jobs:
         with:
           merge-multiple: true
           pattern: release-*
-
-      - name: Get next version
-        uses: reecetech/version-increment@2023.10.2
-        id: version
-        with:
-          scheme: semver
-          increment: minor
   
       - name: Create release
         id: create-release
@@ -92,8 +101,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.version.outputs.version }}
-          release_name: Release ${{ steps.version.outputs.version }}
+          tag_name: ${{ needs.get-version.outputs.version }}
+          release_name: Release ${{ needs.get-version.outputs.version }}
           body: ${{ steps.changes.outputs.log }}
 
       - name: Upload windows asset

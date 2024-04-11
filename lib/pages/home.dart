@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:easy_sidemenu/easy_sidemenu.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:todoer/pages/task_tree.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -14,6 +15,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   PageController pageController = PageController();
   SideMenuController sideMenu = SideMenuController();
+  String appVersion = '';
 
   @override
   void initState() {
@@ -21,6 +23,10 @@ class _MyHomePageState extends State<MyHomePage> {
       pageController.jumpToPage(index);
     });
     super.initState();
+
+    PackageInfo.fromPlatform().then((info) => setState(() {
+          appVersion = info.version;
+        }));
   }
 
   @override
@@ -28,6 +34,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text('Todoer v$appVersion'),
       ),
       body: Row(
         mainAxisAlignment: MainAxisAlignment.start,
