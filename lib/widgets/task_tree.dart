@@ -96,7 +96,7 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
   @override
   Widget build(BuildContext context) {
     if (treeController == null) {
-      return const Text('loading');
+      return const SizedBox.shrink();
     }
 
     final IndentGuide indentGuide = DefaultIndentGuide.of(context);

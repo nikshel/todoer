@@ -20,7 +20,9 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     sideMenu.addListener((index) {
-      pageController.jumpToPage(index);
+      pageController.animateToPage(index,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.fastEaseInToSlowEaseOut);
     });
     super.initState();
 
@@ -69,6 +71,7 @@ class _MyHomePageState extends State<MyHomePage> {
           Expanded(
             child: PageView(
               controller: pageController,
+              scrollDirection: Axis.vertical,
               children: const [
                 TaskTreePage(inWork: true),
                 TaskTreePage(),
