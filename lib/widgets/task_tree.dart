@@ -107,6 +107,12 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
 
     return AnimatedTreeView<Task>(
       treeController: treeController!,
+      transitionBuilder: (context, child, animation) => SizeTransition(
+        sizeFactor: animation,
+        axisAlignment: 1,
+        child: child,
+      ),
+      duration: const Duration(milliseconds: 200),
       nodeBuilder: (BuildContext context, TreeEntry<Task> entry) {
         return DragAndDropTreeTile(
           entry: entry,
@@ -125,7 +131,6 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
           onDeletePressed: (task) async => await storage.removeTask(task.id),
         );
       },
-      duration: const Duration(milliseconds: 200),
     );
   }
 }
