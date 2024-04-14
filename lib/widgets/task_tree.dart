@@ -30,6 +30,12 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
   late TreeStorage storage;
   Task? expandOnUpdate;
 
+  static final nextStatus = <TaskStatus, TaskStatus>{
+    TaskStatus.open: TaskStatus.inWork,
+    TaskStatus.inWork: TaskStatus.done,
+    TaskStatus.done: TaskStatus.open,
+  };
+
   @override
   Future<void> didChangeDependencies() async {
     super.didChangeDependencies();
@@ -93,17 +99,48 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
     await storage.moveTask(details.draggedNode.id, newParent?.id, newIndex);
   }
 
+  void onTileAction(TreeTileAction action, Task task) async {
+    switch (action) {
+      case TreeTileAction.expandPressed:
+        treeController!.toggleExpansion(task);
+
+      case TreeTileAction.statusSwitchPressed:
+        await storage.setTaskStatus(task.id, nextStatus[task.status]!);
+
+      case TreeTileAction.inWorkPressed:
+        var nextStatus = task.status == TaskStatus.inWork
+            ? TaskStatus.open
+            : TaskStatus.inWork;
+        await storage.setTaskStatus(task.id, nextStatus);
+
+      case TreeTileAction.addPressed:
+        treeController!.expand(task);
+        widget.onAddPressed(task);
+
+      case TreeTileAction.editPressed:
+        var formResult = await showTaskForm(context, task);
+        if (formResult != null && context.mounted) {
+          if (formResult.containsKey('delete')) {
+            await storage.removeTask(task.id);
+          } else {
+            await storage.updateTask(
+              task.id,
+              title: formResult['title'],
+              isProject: formResult['isProject'],
+            );
+          }
+        }
+
+      default:
+        throw Exception('Unknown action $action');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (treeController == null) {
       return const SizedBox.shrink();
     }
-
-    final IndentGuide indentGuide = DefaultIndentGuide.of(context);
-    final BorderSide borderSide = BorderSide(
-      color: Theme.of(context).colorScheme.outline,
-      width: indentGuide is AbstractLineGuide ? indentGuide.thickness : 2.0,
-    );
 
     return AnimatedTreeView<Task>(
       treeController: treeController!,
@@ -117,31 +154,8 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
         return DragAndDropTreeTile(
           entry: entry,
           isReadOnly: widget.isReadOnly,
-          borderSide: borderSide,
           onNodeAccepted: onNodeAccepted,
-          onFolderPressed: () => treeController!.toggleExpansion(entry.node),
-          onCheckboxPressed: (task, value) async =>
-              await storage.makeTaskDone(entry.node.id, value),
-          onInWorkPressed: (task) async =>
-              await storage.makeTaskInWork(task.id, !task.isInWork),
-          onAddPressed: (task) {
-            treeController!.expand(task);
-            widget.onAddPressed(task);
-          },
-          onEditPressed: (task) async {
-            var formResult = await showTaskForm(context, entry.node);
-            if (formResult != null && context.mounted) {
-              if (formResult.containsKey('delete')) {
-                await storage.removeTask(task.id);
-              } else {
-                await storage.updateTask(
-                  task.id,
-                  title: formResult['title'],
-                  isProject: formResult['isProject'],
-                );
-              }
-            }
-          },
+          onAction: onTileAction,
         );
       },
     );

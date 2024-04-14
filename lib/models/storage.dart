@@ -80,43 +80,51 @@ class TreeStorage extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> makeTaskDone(int taskId, bool done) async {
-    var (query, args) = done
-        ? _getOwnWithChildrenIdsQuery(taskId)
-        : _getOwnWithParentsIdsQuery(taskId);
+  Future<void> setTaskStatus(int taskId, TaskStatus status) async {
+    String where;
+    List<Object?> args;
+
+    switch (status) {
+      case TaskStatus.open:
+        (where, args) = _getOpenQuery(taskId);
+        break;
+      case TaskStatus.inWork:
+        (where, args) = _getInWorkQuery(taskId);
+        break;
+      case TaskStatus.done:
+        (where, args) = _getDoneQuery(taskId);
+        break;
+      default:
+        throw Exception('Unknown status $status');
+    }
 
     await _db.update(
       tasksTable,
-      {'done': done ? 1 : 0},
-      where: 'id IN ($query)',
+      {'status': status.name},
+      where: where,
       whereArgs: args,
     );
 
     notifyListeners();
   }
 
-  Future<void> makeTaskInWork(int taskId, bool inWork) async {
-    var (query, args) = inWork
-        ? _getOwnWithParentsIdsQuery(taskId)
-        : _getOwnWithChildrenIdsQuery(taskId);
-
-    await _db.update(
-      tasksTable,
-      {
-        'start_since_dt':
-            inWork ? DateTime.timestamp().toIso8601String() : null,
-      },
-      where:
-          'id IN ($query) AND start_since_dt ${inWork ? 'IS NULL' : 'IS NOT NULL'}',
-      whereArgs: args,
+  (String, List<Object?>) _getOpenQuery(int taskId) {
+    //?
+    var (idsSubquery, args) = _getOwnWithParentsIdsQuery(taskId);
+    return (
+      'id IN ($idsSubquery) AND (id = ? OR status = ?)',
+      args + [taskId, TaskStatus.done.name],
     );
+  }
 
-    if (inWork) {
-      // TODO tx
-      await makeTaskDone(taskId, false);
-    }
+  (String, List<Object?>) _getDoneQuery(int taskId) {
+    var (idsSubquery, args) = _getOwnWithChildrenIdsQuery(taskId);
+    return ('id IN ($idsSubquery)', args);
+  }
 
-    notifyListeners();
+  (String, List<Object?>) _getInWorkQuery(int taskId) {
+    var (idsSubquery, args) = _getOwnWithParentsIdsQuery(taskId);
+    return ('id IN ($idsSubquery)', args);
   }
 
   Future<void> removeTask(int taskId) async {
@@ -229,7 +237,7 @@ class TreeStorage extends ChangeNotifier {
       id: values['id'] as int,
       title: values['title'] as String,
       isProject: values['is_project'] as int == 1,
-      done: values['done'] as int == 1,
+      status: TaskStatus.values.byName(values['status'] as String),
       startSince: values['start_since_dt'] == null
           ? null
           : DateTime.parse(values['start_since_dt'] as String),

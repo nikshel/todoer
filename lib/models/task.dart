@@ -1,7 +1,13 @@
+enum TaskStatus {
+  open,
+  inWork,
+  done,
+}
+
 class Task {
   final int id;
   final String title;
-  final bool done;
+  final TaskStatus status;
   final DateTime? startSince;
   final bool isProject;
   final int index;
@@ -10,13 +16,11 @@ class Task {
   final List<Task> children = [];
 
   bool get isLeaf => children.isEmpty;
-  bool get isInWork =>
-      !done && startSince != null && DateTime.timestamp().isAfter(startSince!);
 
   Task({
     required this.id,
     required this.title,
-    required this.done,
+    required this.status,
     required this.startSince,
     required this.isProject,
     required this.index,
@@ -40,6 +44,6 @@ class Task {
 
   @override
   String toString() {
-    return 'Task $id "$title" ${parent?.id} $index';
+    return 'Task $id "$title" $status ${parent?.id} $index';
   }
 }

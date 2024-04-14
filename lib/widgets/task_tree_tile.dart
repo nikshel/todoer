@@ -4,32 +4,36 @@ import 'package:todoer/models/task.dart';
 
 import 'utils.dart';
 
+enum TreeTileAction {
+  expandPressed,
+  statusSwitchPressed,
+  inWorkPressed,
+  addPressed,
+  editPressed,
+}
+
 class DragAndDropTreeTile extends StatelessWidget {
   const DragAndDropTreeTile({
     super.key,
     required this.entry,
     required this.onNodeAccepted,
-    this.borderSide = BorderSide.none,
+    required this.onAction,
     this.isReadOnly = false,
-    required this.onFolderPressed,
-    required this.onCheckboxPressed,
-    required this.onInWorkPressed,
-    required this.onAddPressed,
-    required this.onEditPressed,
   });
 
   final TreeEntry<Task> entry;
   final TreeDragTargetNodeAccepted<Task> onNodeAccepted;
-  final BorderSide borderSide;
   final bool isReadOnly;
-  final VoidCallback? onFolderPressed;
-  final void Function(Task, bool)? onCheckboxPressed;
-  final void Function(Task)? onInWorkPressed;
-  final void Function(Task) onAddPressed;
-  final void Function(Task) onEditPressed;
+  final void Function(TreeTileAction, Task) onAction;
 
   @override
   Widget build(BuildContext context) {
+    final IndentGuide indentGuide = DefaultIndentGuide.of(context);
+    final BorderSide borderSide = BorderSide(
+      color: Theme.of(context).colorScheme.outline,
+      width: indentGuide is AbstractLineGuide ? indentGuide.thickness : 2.0,
+    );
+
     // var storage = Provider.of<TreeStorage>(context, listen: false);
     return TreeDragTarget<Task>(
       node: entry.node,
@@ -75,11 +79,7 @@ class DragAndDropTreeTile extends StatelessWidget {
           child: TreeTile(
             entry: entry,
             isReadOnly: isReadOnly,
-            onFolderPressed: entry.node.isLeaf ? null : onFolderPressed,
-            onCheckboxPressed: onCheckboxPressed,
-            onInWorkPressed: onInWorkPressed,
-            onAddPressed: onAddPressed,
-            onEditPressed: onEditPressed,
+            onAction: onAction,
             decoration: decoration,
           ),
         );
@@ -93,24 +93,23 @@ class TreeTile extends StatelessWidget {
     super.key,
     required this.entry,
     this.isReadOnly = false,
-    this.onFolderPressed,
-    this.onCheckboxPressed,
-    this.onInWorkPressed,
-    this.onAddPressed,
-    this.onEditPressed,
+    this.onAction,
     this.decoration,
     this.showIndentation = true,
   });
 
   final TreeEntry<Task> entry;
   final bool isReadOnly;
-  final VoidCallback? onFolderPressed;
-  final void Function(Task, bool)? onCheckboxPressed;
-  final void Function(Task)? onInWorkPressed;
-  final void Function(Task)? onAddPressed;
-  final void Function(Task)? onEditPressed;
+  final void Function(TreeTileAction, Task)? onAction;
+
   final Decoration? decoration;
   final bool showIndentation;
+
+  static final icons = <TaskStatus, IconData>{
+    TaskStatus.open: Icons.circle_outlined,
+    TaskStatus.inWork: Icons.play_arrow,
+    TaskStatus.done: Icons.check,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -118,54 +117,58 @@ class TreeTile extends StatelessWidget {
       padding: const EdgeInsetsDirectional.only(end: 8),
       child: Row(
         children: [
-          Checkbox(
-            shape: const CircleBorder(),
-            value: entry.node.done,
-            onChanged: onCheckboxPressed == null
-                ? null
-                : (value) => onCheckboxPressed!(entry.node, value!),
-          ),
+          IconButton(
+              icon: Icon(icons[entry.node.status]),
+              color:
+                  entry.node.status == TaskStatus.inWork ? Colors.blue : null,
+              onPressed: onAction == null
+                  ? null
+                  : () => onAction!(
+                      TreeTileAction.statusSwitchPressed, entry.node)),
           if (entry.node.isProject)
             const Padding(
-              padding: EdgeInsets.only(left: 5, right: 7),
+              padding: EdgeInsets.only(left: 7, right: 7),
               child: Icon(Icons.folder),
             ),
           Expanded(
             child: GestureDetector(
-              onTap: onFolderPressed,
-              onDoubleTap: () =>
-                  onEditPressed == null ? null : onEditPressed!(entry.node),
+              onTap: () => onAction!(TreeTileAction.expandPressed, entry.node),
+              onDoubleTap: () => onAction == null
+                  ? null
+                  : onAction!(TreeTileAction.editPressed, entry.node),
               child: Text(
                 entry.node.title,
                 style: TextStyle(
-                    decoration:
-                        entry.node.done ? TextDecoration.lineThrough : null,
-                    color: entry.node.done ? Colors.grey : null),
+                    decoration: entry.node.status == TaskStatus.done
+                        ? TextDecoration.lineThrough
+                        : null,
+                    color: entry.node.status == TaskStatus.done
+                        ? Colors.grey
+                        : null),
               ),
             ),
           ),
+          if (entry.node.status == TaskStatus.inWork)
+            IconButton(
+              icon: const Icon(Icons.replay),
+              onPressed: onAction == null
+                  ? null
+                  : () => onAction!(TreeTileAction.inWorkPressed, entry.node),
+            ),
           if (!entry.node.isLeaf)
             FolderButton(
               openedIcon: const Icon(Icons.expand_more),
               closedIcon: const Icon(Icons.chevron_right),
               isOpen: entry.node.isLeaf ? null : entry.isExpanded,
-              onPressed: onFolderPressed,
-            ),
-          if (!entry.node.done)
-            IconButton(
-              icon: Icon(
-                Icons.play_arrow,
-                color: entry.node.isInWork ? Colors.blue : null,
-              ),
-              onPressed: onInWorkPressed == null
-                  ? null
-                  : () => onInWorkPressed!(entry.node),
+              onPressed: () =>
+                  onAction!(TreeTileAction.expandPressed, entry.node),
             ),
           if (!isReadOnly)
             IconButton(
               icon: const Icon(Icons.add),
-              onPressed:
-                  onAddPressed == null ? null : () => onAddPressed!(entry.node),
+              onPressed: onAction == null
+                  ? null
+                  : () => onAction!(TreeTileAction.addPressed, entry.node),
             ),
         ],
       ),
@@ -181,7 +184,7 @@ class TreeTile extends StatelessWidget {
     if (showIndentation) {
       return TreeIndentation(
         entry: entry,
-        guide: const ConnectingLinesGuide(indent: 33),
+        guide: const ConnectingLinesGuide(indent: 40),
         child: content,
       );
     }

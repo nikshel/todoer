@@ -16,6 +16,17 @@ final List<String> migrations = [
   ALTER TABLE tasks ADD COLUMN is_project INTEGER NOT NULL DEFAULT 0;
   ''',
   '''
-  ALTER TABLE tasks ADD column start_since_dt TEXT
+  ALTER TABLE tasks ADD column start_since_dt TEXT;
   ''',
+  '''
+  ALTER TABLE tasks ADD COLUMN status TEXT NOT NULL DEFAULT "open";
+  UPDATE tasks SET status = (
+    CASE
+      WHEN done THEN 'done'
+      WHEN start_since_dt IS NOT NULL THEN 'inWork'
+      ELSE 'open'
+    END
+  );
+  ALTER TABLE tasks DROP COLUMN done;
+  '''
 ];

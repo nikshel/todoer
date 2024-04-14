@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:todoer/models/storage.dart';
+import 'package:todoer/models/task.dart';
 import 'package:todoer/widgets/task_tree.dart';
 import 'package:todoer/widgets/utils.dart';
 
@@ -23,7 +24,10 @@ class TaskTreePage extends StatelessWidget {
           isReadOnly: inWork,
           shouldShow: (task) =>
               !inWork ||
-              (task.isInWork || task.getAllChildren().any((t) => t.isInWork)),
+              (task.status == TaskStatus.inWork ||
+                  task
+                      .getAllChildren()
+                      .any((t) => t.status == TaskStatus.inWork)),
           onAddPressed: (task) async => await createTask(context, task.id),
         ),
         onKeyEvent: (event) async {
