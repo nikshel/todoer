@@ -62,6 +62,24 @@ class TreeStorage extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateTask(
+    int taskId, {
+    required String title,
+    required bool isProject,
+  }) async {
+    await _db.update(
+      tasksTable,
+      {
+        'title': title,
+        'is_project': isProject ? 1 : 0,
+      },
+      where: 'id = ?',
+      whereArgs: [taskId],
+    );
+
+    notifyListeners();
+  }
+
   Future<void> makeTaskDone(int taskId, bool done) async {
     var (query, args) = done
         ? _getOwnWithChildrenIdsQuery(taskId)

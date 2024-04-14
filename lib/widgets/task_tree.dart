@@ -128,7 +128,20 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
             treeController!.expand(task);
             widget.onAddPressed(task);
           },
-          onDeletePressed: (task) async => await storage.removeTask(task.id),
+          onEditPressed: (task) async {
+            var formResult = await showTaskForm(context, entry.node);
+            if (formResult != null && context.mounted) {
+              if (formResult.containsKey('delete')) {
+                await storage.removeTask(task.id);
+              } else {
+                await storage.updateTask(
+                  task.id,
+                  title: formResult['title'],
+                  isProject: formResult['isProject'],
+                );
+              }
+            }
+          },
         );
       },
     );

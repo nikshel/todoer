@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:todoer/models/storage.dart';
-import 'package:todoer/widgets/create_task_form.dart';
 import 'package:todoer/widgets/task_tree.dart';
+import 'package:todoer/widgets/utils.dart';
 
 class TaskTreePage extends StatelessWidget {
   final bool inWork;
@@ -40,12 +40,7 @@ class TaskTreePage extends StatelessWidget {
   }
 
   Future<void> createTask(BuildContext context, [int? parentId]) async {
-    var formResult = await showModalBottomSheet<Map<String, dynamic>>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (_) => CreateTaskForm(),
-    );
+    var formResult = await showTaskForm(context);
     if (formResult == null || !context.mounted) {
       return;
     }

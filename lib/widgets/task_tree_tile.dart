@@ -15,7 +15,7 @@ class DragAndDropTreeTile extends StatelessWidget {
     required this.onCheckboxPressed,
     required this.onInWorkPressed,
     required this.onAddPressed,
-    required this.onDeletePressed,
+    required this.onEditPressed,
   });
 
   final TreeEntry<Task> entry;
@@ -26,7 +26,7 @@ class DragAndDropTreeTile extends StatelessWidget {
   final void Function(Task, bool)? onCheckboxPressed;
   final void Function(Task)? onInWorkPressed;
   final void Function(Task) onAddPressed;
-  final void Function(Task) onDeletePressed;
+  final void Function(Task) onEditPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +79,7 @@ class DragAndDropTreeTile extends StatelessWidget {
             onCheckboxPressed: onCheckboxPressed,
             onInWorkPressed: onInWorkPressed,
             onAddPressed: onAddPressed,
-            onDeletePressed: onDeletePressed,
+            onEditPressed: onEditPressed,
             decoration: decoration,
           ),
         );
@@ -97,7 +97,7 @@ class TreeTile extends StatelessWidget {
     this.onCheckboxPressed,
     this.onInWorkPressed,
     this.onAddPressed,
-    this.onDeletePressed,
+    this.onEditPressed,
     this.decoration,
     this.showIndentation = true,
   });
@@ -108,7 +108,7 @@ class TreeTile extends StatelessWidget {
   final void Function(Task, bool)? onCheckboxPressed;
   final void Function(Task)? onInWorkPressed;
   final void Function(Task)? onAddPressed;
-  final void Function(Task)? onDeletePressed;
+  final void Function(Task)? onEditPressed;
   final Decoration? decoration;
   final bool showIndentation;
 
@@ -133,6 +133,8 @@ class TreeTile extends StatelessWidget {
           Expanded(
             child: GestureDetector(
               onTap: onFolderPressed,
+              onDoubleTap: () =>
+                  onEditPressed == null ? null : onEditPressed!(entry.node),
               child: Text(
                 entry.node.title,
                 style: TextStyle(
@@ -165,13 +167,6 @@ class TreeTile extends StatelessWidget {
               onPressed:
                   onAddPressed == null ? null : () => onAddPressed!(entry.node),
             ),
-          if (!isReadOnly)
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: onDeletePressed == null
-                  ? null
-                  : () => onDeletePressed!(entry.node),
-            )
         ],
       ),
     );
