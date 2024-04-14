@@ -126,9 +126,9 @@ class TreeTile extends StatelessWidget {
                 : (value) => onCheckboxPressed!(entry.node, value!),
           ),
           if (entry.node.isProject)
-            IconButton(
-              icon: const Icon(Icons.folder),
-              onPressed: () {},
+            const Padding(
+              padding: EdgeInsets.only(left: 5, right: 7),
+              child: Icon(Icons.folder),
             ),
           Expanded(
             child: GestureDetector(
@@ -186,6 +186,7 @@ class TreeTile extends StatelessWidget {
     if (showIndentation) {
       return TreeIndentation(
         entry: entry,
+        guide: const ConnectingLinesGuide(indent: 33),
         child: content,
       );
     }
