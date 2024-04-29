@@ -109,11 +109,15 @@ class TreeStorage extends ChangeNotifier {
   }
 
   (String, List<Object?>) _getOpenQuery(int taskId) {
-    //?
-    var (idsSubquery, args) = _getOwnWithParentsIdsQuery(taskId);
+    var (parentsIdsSubquery, args1) = _getOwnWithParentsIdsQuery(taskId);
+    var (childrenIdsSubquery, args2) = _getOwnWithChildrenIdsQuery(taskId);
     return (
-      'id IN ($idsSubquery) AND (id = ? OR status = ?)',
-      args + [taskId, TaskStatus.done.name],
+      '''
+      id = ?
+      OR (id IN ($parentsIdsSubquery) AND status = '${TaskStatus.done.name}')
+      OR (id IN ($childrenIdsSubquery) AND status = '${TaskStatus.inWork.name}')
+      ''',
+      [taskId, ...args1, ...args2],
     );
   }
 
