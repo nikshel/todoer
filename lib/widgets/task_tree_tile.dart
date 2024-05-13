@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_fancy_tree_view/flutter_fancy_tree_view.dart';
 import 'package:todoer/models/task.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 import 'utils.dart';
 
@@ -114,23 +116,26 @@ class TreeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget content = Padding(
-      padding: const EdgeInsetsDirectional.only(end: 8),
-      child: Row(
-        children: [
-          IconButton(
-              icon: Icon(icons[entry.node.status]),
-              color:
-                  entry.node.status == TaskStatus.inWork ? Colors.blue : null,
-              onPressed: onAction == null
-                  ? null
-                  : () => onAction!(
-                      TreeTileAction.statusSwitchPressed, entry.node)),
-          if (entry.node.isProject)
-            const Padding(
-              padding: EdgeInsets.only(left: 7, right: 7),
-              child: Icon(Icons.folder),
-            ),
-          Expanded(
+        padding: const EdgeInsetsDirectional.only(end: 8),
+        child: ListTile(
+          hoverColor: const Color.fromARGB(255, 239, 239, 239),
+          onTap: () {},
+          leading: Row(mainAxisSize: MainAxisSize.min, children: [
+            IconButton(
+                icon: Icon(icons[entry.node.status]),
+                color:
+                    entry.node.status == TaskStatus.inWork ? Colors.blue : null,
+                onPressed: onAction == null
+                    ? null
+                    : () => onAction!(
+                        TreeTileAction.statusSwitchPressed, entry.node)),
+            if (entry.node.isProject)
+              const Padding(
+                padding: EdgeInsets.only(left: 7, right: 7),
+                child: Icon(Icons.folder),
+              ),
+          ]),
+          title: Expanded(
             child: GestureDetector(
               onTap: () => onAction!(TreeTileAction.expandPressed, entry.node),
               onDoubleTap: () => onAction == null
@@ -148,31 +153,43 @@ class TreeTile extends StatelessWidget {
               ),
             ),
           ),
-          if (entry.node.status == TaskStatus.inWork)
-            IconButton(
-              icon: const Icon(Icons.replay),
-              onPressed: onAction == null
-                  ? null
-                  : () => onAction!(TreeTileAction.inWorkPressed, entry.node),
-            ),
-          if (!entry.node.isLeaf)
-            FolderButton(
-              openedIcon: const Icon(Icons.expand_more),
-              closedIcon: const Icon(Icons.chevron_right),
-              isOpen: entry.node.isLeaf ? null : entry.isExpanded,
-              onPressed: () =>
-                  onAction!(TreeTileAction.expandPressed, entry.node),
-            ),
-          if (!isReadOnly)
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: onAction == null
-                  ? null
-                  : () => onAction!(TreeTileAction.addPressed, entry.node),
-            ),
-        ],
-      ),
-    );
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (entry.node.link != null)
+                IconButton(
+                  onPressed: () => launchUrlString(
+                    entry.node.link!,
+                    mode: LaunchMode.platformDefault,
+                  ),
+                  icon: const Icon(Icons.link),
+                ),
+              if (entry.node.status == TaskStatus.inWork)
+                IconButton(
+                  icon: const Icon(Icons.replay),
+                  onPressed: onAction == null
+                      ? null
+                      : () =>
+                          onAction!(TreeTileAction.inWorkPressed, entry.node),
+                ),
+              if (!entry.node.isLeaf)
+                FolderButton(
+                  openedIcon: const Icon(Icons.expand_more),
+                  closedIcon: const Icon(Icons.chevron_right),
+                  isOpen: entry.node.isLeaf ? null : entry.isExpanded,
+                  onPressed: () =>
+                      onAction!(TreeTileAction.expandPressed, entry.node),
+                ),
+              if (!isReadOnly)
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: onAction == null
+                      ? null
+                      : () => onAction!(TreeTileAction.addPressed, entry.node),
+                ),
+            ],
+          ),
+        ));
 
     if (decoration != null) {
       content = DecoratedBox(

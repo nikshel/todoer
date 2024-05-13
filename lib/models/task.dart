@@ -9,6 +9,7 @@ class Task {
   final String title;
   final TaskStatus status;
   final DateTime? startSince;
+  final String? link;
   final bool isProject;
   final int index;
 
@@ -22,6 +23,7 @@ class Task {
     required this.title,
     required this.status,
     required this.startSince,
+    required this.link,
     required this.isProject,
     required this.index,
   });

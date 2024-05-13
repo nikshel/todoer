@@ -38,6 +38,21 @@ class TaskForm extends StatelessWidget {
               title: const Text('Сделать проектом'),
               initialValue: currentTask?.isProject ?? false,
             ),
+            FormBuilderTextField(
+              name: 'link',
+              decoration: const InputDecoration(labelText: 'Ссылка'),
+              validator: FormBuilderValidators.url(
+                requireTld: true,
+                allowUnderscore: true,
+                requireProtocol: true,
+              ),
+              textInputAction: TextInputAction.send,
+              valueTransformer: (value) => value?.trim() ?? '',
+              initialValue: currentTask?.link,
+            ),
+            const SizedBox(
+              height: 20,
+            ),
             Container(
               alignment: Alignment.bottomRight,
               child: Row(
@@ -51,7 +66,7 @@ class TaskForm extends StatelessWidget {
                           foregroundColor:
                               MaterialStateProperty.all(Colors.white),
                           backgroundColor: MaterialStateProperty.all(
-                              Color.fromARGB(255, 224, 86, 77))),
+                              const Color.fromARGB(255, 224, 86, 77))),
                       child: const Text('Удалить'),
                     ),
                   if (currentTask != null) const SizedBox(width: 10),
@@ -74,7 +89,11 @@ class TaskForm extends StatelessWidget {
     } else {
       var isValid = _formKey.currentState!.saveAndValidate();
       if (isValid) {
-        Navigator.pop(context, _formKey.currentState!.value);
+        var values = {..._formKey.currentState!.value};
+        if (values['link'] == '') {
+          values['link'] = null;
+        }
+        Navigator.pop(context, values);
       }
     }
   }
