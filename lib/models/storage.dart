@@ -40,6 +40,7 @@ class TreeStorage extends ChangeNotifier {
   Future<void> createTask({
     required String title,
     required bool isProject,
+    String? link,
     int? parentId,
   }) async {
     await _db.transaction((txn) async {
@@ -54,6 +55,7 @@ class TreeStorage extends ChangeNotifier {
       await txn.insert(tasksTable, {
         'title': title,
         'is_project': isProject ? 1 : 0,
+        'link': link,
         'parent_id': parentId,
         'idx': maxIdx + 1,
       });
@@ -66,12 +68,14 @@ class TreeStorage extends ChangeNotifier {
     int taskId, {
     required String title,
     required bool isProject,
+    required String? link,
   }) async {
     await _db.update(
       tasksTable,
       {
         'title': title,
         'is_project': isProject ? 1 : 0,
+        'link': link,
       },
       where: 'id = ?',
       whereArgs: [taskId],
@@ -245,6 +249,7 @@ class TreeStorage extends ChangeNotifier {
       startSince: values['start_since_dt'] == null
           ? null
           : DateTime.parse(values['start_since_dt'] as String),
+      link: values['link'] == null ? null : values['link'] as String,
       index: values['idx'] as int,
     );
   }

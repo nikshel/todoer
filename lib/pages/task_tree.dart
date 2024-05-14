@@ -52,6 +52,7 @@ class TaskTreePage extends StatelessWidget {
     await tree.createTask(
       title: formResult['title'],
       isProject: formResult['isProject'],
+      link: formResult['link'],
       parentId: parentId,
     );
   }

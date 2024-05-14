@@ -127,6 +127,7 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
               task.id,
               title: formResult['title'],
               isProject: formResult['isProject'],
+              link: formResult['link'],
             );
           }
         }

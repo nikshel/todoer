@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_fancy_tree_view/flutter_fancy_tree_view.dart';
 import 'package:todoer/models/task.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 import 'utils.dart';
 
@@ -148,6 +150,14 @@ class TreeTile extends StatelessWidget {
               ),
             ),
           ),
+          if (entry.node.link != null)
+            IconButton(
+              onPressed: () => launchUrlString(
+                entry.node.link!,
+                mode: LaunchMode.platformDefault,
+              ),
+              icon: const Icon(Icons.link),
+            ),
           if (entry.node.status == TaskStatus.inWork)
             IconButton(
               icon: const Icon(Icons.replay),

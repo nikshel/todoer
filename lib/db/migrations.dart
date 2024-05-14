@@ -16,7 +16,7 @@ final List<String> migrations = [
   ALTER TABLE tasks ADD COLUMN is_project INTEGER NOT NULL DEFAULT 0;
   ''',
   '''
-  ALTER TABLE tasks ADD column start_since_dt TEXT;
+  ALTER TABLE tasks ADD COLUMN start_since_dt TEXT;
   ''',
   '''
   ALTER TABLE tasks ADD COLUMN status TEXT NOT NULL DEFAULT "open";
@@ -28,5 +28,8 @@ final List<String> migrations = [
     END
   );
   ALTER TABLE tasks DROP COLUMN done;
+  ''',
+  '''
+  ALTER TABLE tasks ADD COLUMN link TEXT;
   '''
 ];
