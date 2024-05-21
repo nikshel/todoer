@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_fancy_tree_view/flutter_fancy_tree_view.dart';
+import 'package:provider/provider.dart';
+import 'package:todoer/models/storage.dart';
 import 'package:todoer/models/task.dart';
 import 'package:todoer/widgets/task_form.dart';
 
@@ -25,10 +27,16 @@ Future<Map<String, dynamic>?> showTaskForm(
   BuildContext context, [
   Task? current,
 ]) async {
+  var storage = Provider.of<TreeStorage>(context, listen: false);
+  var groups = await storage.getGroups();
+
   return await showModalBottomSheet<Map<String, dynamic>>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (_) => TaskForm(currentTask: current),
+    builder: (_) => TaskForm(
+      currentTask: current,
+      groups: groups,
+    ),
   );
 }

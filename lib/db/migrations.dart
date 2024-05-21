@@ -31,5 +31,19 @@ final List<String> migrations = [
   ''',
   '''
   ALTER TABLE tasks ADD COLUMN link TEXT;
+  ''',
+  '''
+  CREATE TABLE groups (
+    id INTEGER PRIMARY KEY,
+    title TEXT NOT NULL,
+    system_type TEXT NOT NULL
+  ) STRICT;
+
+  CREATE UNIQUE INDEX ux_groups_title ON groups (title);
+  CREATE UNIQUE INDEX ux_groups_system_type ON groups (system_type);
+
+  INSERT INTO groups (title, system_type) VALUES ('Сегодня', 'today'), ('Неделя', 'week');
+
+  ALTER TABLE tasks ADD COLUMN groups_ids TEXT;
   '''
 ];

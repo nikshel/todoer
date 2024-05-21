@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:easy_sidemenu/easy_sidemenu.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
+import 'package:todoer/models/group.dart';
+import 'package:todoer/models/storage.dart';
+import 'package:todoer/models/task.dart';
 import 'package:todoer/pages/task_tree.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -16,6 +20,7 @@ class _MyHomePageState extends State<MyHomePage> {
   PageController pageController = PageController();
   SideMenuController sideMenu = SideMenuController();
   String appVersion = '';
+  List<Group> groups = [];
 
   @override
   void initState() {
@@ -28,6 +33,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
     PackageInfo.fromPlatform().then((info) => setState(() {
           appVersion = info.version;
+        }));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    var storage = Provider.of<TreeStorage>(context);
+    storage.getGroups().then((groups) => setState(() {
+          this.groups = groups;
         }));
   }
 
@@ -59,6 +74,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
                 icon: const Icon(Icons.rowing),
               ),
+              ...groups.map((group) => SideMenuItem(
+                    title: group.title,
+                    onTap: (index, _) {
+                      sideMenu.changePage(index);
+                    },
+                    icon: const Icon(Icons.folder),
+                  )),
               SideMenuItem(
                 title: 'Проекты',
                 onTap: (index, _) {
@@ -72,9 +94,16 @@ class _MyHomePageState extends State<MyHomePage> {
             child: PageView(
               controller: pageController,
               scrollDirection: Axis.vertical,
-              children: const [
-                TaskTreePage(inWork: true),
-                TaskTreePage(),
+              children: [
+                TaskTreePage(
+                  isReadOnly: true,
+                  filter: (task) => task.status == TaskStatus.inWork,
+                ),
+                ...groups.map((group) => TaskTreePage(
+                      isReadOnly: true,
+                      filter: (task) => task.groups.contains(group),
+                    )),
+                const TaskTreePage(),
               ],
             ),
           ),

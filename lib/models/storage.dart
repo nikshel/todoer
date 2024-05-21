@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:todoer/models/group.dart';
 import 'package:todoer/models/task.dart';
 
 const tasksTable = 'tasks';
+const groupsTable = 'groups';
 
 class TreeStorage extends ChangeNotifier {
   final Database _db;
@@ -12,6 +14,8 @@ class TreeStorage extends ChangeNotifier {
   TreeStorage(this._db);
 
   Future<List<Task>> getRoots() async {
+    var groups = await getGroups();
+
     var res = await _db.query(tasksTable, orderBy: 'parent_id, idx');
 
     var tasksById = <int, Task>{};
@@ -33,15 +37,23 @@ class TreeStorage extends ChangeNotifier {
       assert(targetChildren.length == task!.index, 'Incorrect task idx');
       task!.parent = parent;
       targetChildren.add(task);
+
+      task.groups = _parseGroups(rawTask['groups_ids'] as String?, groups);
     }
     return roots;
+  }
+
+  Future<List<Group>> getGroups() async {
+    var res = await _db.query(groupsTable);
+    return res.map((row) => _makeGroup(row)).toList();
   }
 
   Future<void> createTask({
     required String title,
     required bool isProject,
-    String? link,
-    int? parentId,
+    required String? link,
+    required int? parentId,
+    required List<Group> groups,
   }) async {
     await _db.transaction((txn) async {
       var res = await txn.query(
@@ -58,6 +70,7 @@ class TreeStorage extends ChangeNotifier {
         'link': link,
         'parent_id': parentId,
         'idx': maxIdx + 1,
+        'groups_ids': _serializeGroups(groups),
       });
     }, exclusive: true);
 
@@ -69,6 +82,7 @@ class TreeStorage extends ChangeNotifier {
     required String title,
     required bool isProject,
     required String? link,
+    required List<Group> groups,
   }) async {
     await _db.update(
       tasksTable,
@@ -76,6 +90,7 @@ class TreeStorage extends ChangeNotifier {
         'title': title,
         'is_project': isProject ? 1 : 0,
         'link': link,
+        'groups_ids': _serializeGroups(groups),
       },
       where: 'id = ?',
       whereArgs: [taskId],
@@ -252,5 +267,28 @@ class TreeStorage extends ChangeNotifier {
       link: values['link'] == null ? null : values['link'] as String,
       index: values['idx'] as int,
     );
+  }
+
+  Group _makeGroup(Map<String, Object?> values) {
+    return Group(
+      id: values['id'] as int,
+      title: values['title'] as String,
+      systemType:
+          GroupSystemType.values.byName(values['system_type'] as String),
+    );
+  }
+
+  String? _serializeGroups(List<Group> groups) {
+    return groups.isEmpty ? null : '|${groups.map((g) => g.id).join('|')}|';
+  }
+
+  List<Group> _parseGroups(String? groupIds, List<Group> allGroups) {
+    return groupIds == null
+        ? []
+        : groupIds
+            .split('|')
+            .where((s) => s.isNotEmpty)
+            .map((s) => allGroups.firstWhere((g) => g.id == int.parse(s)))
+            .toList();
   }
 }

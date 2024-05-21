@@ -1,3 +1,5 @@
+import 'package:todoer/models/group.dart';
+
 enum TaskStatus {
   open,
   inWork,
@@ -12,6 +14,8 @@ class Task {
   final String? link;
   final bool isProject;
   final int index;
+
+  List<Group> groups = [];
 
   Task? parent; // TODO late final
   final List<Task> children = [];

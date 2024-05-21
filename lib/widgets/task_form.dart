@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:todoer/models/group.dart';
 import 'package:todoer/models/task.dart';
 
 class TaskForm extends StatelessWidget {
   final _formKey = GlobalKey<FormBuilderState>();
   final Task? currentTask;
+  final List<Group> groups;
 
   TaskForm({
     super.key,
     this.currentTask,
+    required this.groups,
   });
 
   @override
@@ -37,6 +40,17 @@ class TaskForm extends StatelessWidget {
               name: 'isProject',
               title: const Text('Сделать проектом'),
               initialValue: currentTask?.isProject ?? false,
+            ),
+            FormBuilderFilterChip(
+              name: 'groups',
+              options: groups
+                  .map((group) => FormBuilderChipOption(
+                        value: group.id,
+                        child: Text(group.title),
+                      ))
+                  .toList(),
+              initialValue: currentTask?.groups.map((g) => g.id).toList(),
+              spacing: 5,
             ),
             FormBuilderTextField(
               name: 'link',
@@ -90,9 +104,15 @@ class TaskForm extends StatelessWidget {
       var isValid = _formKey.currentState!.saveAndValidate();
       if (isValid) {
         var values = {..._formKey.currentState!.value};
+
         if (values['link'] == '') {
           values['link'] = null;
         }
+
+        values['groups'] = ((values['groups'] as List<int>?) ?? [])
+            .map((id) => groups.firstWhere((g) => g.id == id))
+            .toList();
+
         Navigator.pop(context, values);
       }
     }

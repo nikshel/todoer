@@ -7,11 +7,13 @@ import 'package:todoer/widgets/task_tree.dart';
 import 'package:todoer/widgets/utils.dart';
 
 class TaskTreePage extends StatelessWidget {
-  final bool inWork;
+  final bool isReadOnly;
+  final bool Function(Task)? filter;
 
   const TaskTreePage({
     super.key,
-    this.inWork = false,
+    this.isReadOnly = false,
+    this.filter,
   });
 
   @override
@@ -21,13 +23,11 @@ class TaskTreePage extends StatelessWidget {
         focusNode: FocusNode(),
         autofocus: true,
         child: DragAndDropTreeView(
-          isReadOnly: inWork,
+          isReadOnly: isReadOnly,
           shouldShow: (task) =>
-              !inWork ||
-              (task.status == TaskStatus.inWork ||
-                  task
-                      .getAllChildren()
-                      .any((t) => t.status == TaskStatus.inWork)),
+              filter == null ||
+              filter!(task) ||
+              task.getAllChildren().any(filter!),
           onAddPressed: (task) async => await createTask(context, task.id),
         ),
         onKeyEvent: (event) async {
@@ -54,6 +54,7 @@ class TaskTreePage extends StatelessWidget {
       isProject: formResult['isProject'],
       link: formResult['link'],
       parentId: parentId,
+      groups: formResult['groups'],
     );
   }
 }
