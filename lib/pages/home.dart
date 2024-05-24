@@ -22,6 +22,11 @@ class _MyHomePageState extends State<MyHomePage> {
   String appVersion = '';
   List<Group> groups = [];
 
+  static Map<GroupSystemType, IconData> groupIcons = {
+    GroupSystemType.today: Icons.today,
+    GroupSystemType.week: Icons.calendar_month,
+  };
+
   @override
   void initState() {
     sideMenu.addListener((index) {
@@ -79,7 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     onTap: (index, _) {
                       sideMenu.changePage(index);
                     },
-                    icon: const Icon(Icons.folder),
+                    icon: Icon(groupIcons[group.systemType]),
                   )),
               SideMenuItem(
                 title: 'Проекты',
