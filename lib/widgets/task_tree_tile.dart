@@ -119,6 +119,9 @@ class TreeTile extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
+              // iconSize: 25,
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(4),
               icon: Icon(icons[entry.node.status]),
               color:
                   entry.node.status == TaskStatus.inWork ? Colors.blue : null,
@@ -128,7 +131,7 @@ class TreeTile extends StatelessWidget {
                       TreeTileAction.statusSwitchPressed, entry.node)),
           if (entry.node.isProject)
             const Padding(
-              padding: EdgeInsets.only(left: 7, right: 7),
+              padding: EdgeInsets.only(left: 3, right: 7),
               child: Icon(Icons.folder),
             ),
           Expanded(
@@ -140,6 +143,7 @@ class TreeTile extends StatelessWidget {
               child: Text(
                 entry.node.title,
                 style: TextStyle(
+                    fontSize: 15,
                     decoration: entry.node.status == TaskStatus.done
                         ? TextDecoration.lineThrough
                         : null,
@@ -151,6 +155,8 @@ class TreeTile extends StatelessWidget {
           ),
           if (entry.node.link != null)
             IconButton(
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(3),
               onPressed: () => launchUrlString(
                 entry.node.link!,
                 mode: LaunchMode.platformDefault,
@@ -160,12 +166,16 @@ class TreeTile extends StatelessWidget {
           if (entry.node.status == TaskStatus.inWork)
             IconButton(
               icon: const Icon(Icons.replay),
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(3),
               onPressed: onAction == null
                   ? null
                   : () => onAction!(TreeTileAction.inWorkPressed, entry.node),
             ),
           if (!entry.node.isLeaf)
             FolderButton(
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(3),
               openedIcon: const Icon(Icons.expand_more),
               closedIcon: const Icon(Icons.chevron_right),
               isOpen: entry.node.isLeaf ? null : entry.isExpanded,
@@ -175,6 +185,8 @@ class TreeTile extends StatelessWidget {
           if (!isReadOnly)
             IconButton(
               icon: const Icon(Icons.add),
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(3),
               onPressed: onAction == null
                   ? null
                   : () => onAction!(TreeTileAction.addPressed, entry.node),
@@ -193,7 +205,7 @@ class TreeTile extends StatelessWidget {
     if (showIndentation) {
       return TreeIndentation(
         entry: entry,
-        guide: const ConnectingLinesGuide(indent: 40),
+        guide: const ConnectingLinesGuide(indent: 33),
         child: content,
       );
     }
