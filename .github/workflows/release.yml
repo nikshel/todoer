@@ -112,7 +112,7 @@ jobs:
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: ./todoer-windows.zip
-          asset_name: todoer-windows.zip
+          asset_name: todoer-${{ needs.get-version.outputs.version }}-windows.zip
           asset_content_type: application/zip
 
       - name: Upload macos asset
@@ -122,6 +122,6 @@ jobs:
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: ./todoer-macos.dmg
-          asset_name: todoer-macos.dmg
+          asset_name: todoer-${{ needs.get-version.outputs.version }}-macos.dmg
           asset_content_type: application/octet-stream
           
