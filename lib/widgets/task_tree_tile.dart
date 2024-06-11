@@ -8,9 +8,10 @@ import 'utils.dart';
 enum TreeTileAction {
   expandPressed,
   statusSwitchPressed,
-  inWorkPressed,
+  reopenPressed,
   addPressed,
   editPressed,
+  removePressed,
 }
 
 class DragAndDropTreeTile extends StatelessWidget {
@@ -71,7 +72,7 @@ class DragAndDropTreeTile extends StatelessWidget {
               elevation: 4,
               child: TreeTile(
                 entry: entry,
-                isReadOnly: isReadOnly,
+                isReadOnly: true,
                 showIndentation: false,
               ),
             ),
@@ -86,6 +87,12 @@ class DragAndDropTreeTile extends StatelessWidget {
       },
     );
   }
+}
+
+enum TreeTileMenuOption {
+  addTask,
+  reopenTask,
+  removeTask,
 }
 
 class TreeTile extends StatelessWidget {
@@ -118,7 +125,6 @@ class TreeTile extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-              // iconSize: 25,
               constraints: const BoxConstraints(),
               padding: const EdgeInsets.all(4),
               icon: Icon(icons[entry.node.status]),
@@ -139,16 +145,33 @@ class TreeTile extends StatelessWidget {
               onDoubleTap: () => onAction == null
                   ? null
                   : onAction!(TreeTileAction.editPressed, entry.node),
-              child: Text(
-                entry.node.title,
-                style: TextStyle(
-                    fontSize: 15,
-                    decoration: entry.node.status == TaskStatus.done
-                        ? TextDecoration.lineThrough
-                        : null,
-                    color: entry.node.status == TaskStatus.done
-                        ? Colors.grey
-                        : null),
+              behavior: HitTestBehavior.translucent,
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text(
+                    entry.node.title,
+                    style: TextStyle(
+                        fontSize: 15,
+                        decoration: entry.node.status == TaskStatus.done
+                            ? TextDecoration.lineThrough
+                            : null,
+                        color: entry.node.status == TaskStatus.done
+                            ? Colors.grey
+                            : null),
+                  ),
+                  if (!entry.node.isLeaf)
+                    FolderButton(
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(3),
+                      openedIcon: const Icon(Icons.expand_more),
+                      closedIcon: const Icon(Icons.chevron_right),
+                      isOpen: entry.node.isLeaf ? null : entry.isExpanded,
+                      onPressed: () =>
+                          onAction!(TreeTileAction.expandPressed, entry.node),
+                    ),
+                ],
               ),
             ),
           ),
@@ -162,33 +185,32 @@ class TreeTile extends StatelessWidget {
               ),
               icon: const Icon(Icons.link),
             ),
-          if (entry.node.status == TaskStatus.inWork)
-            IconButton(
-              icon: const Icon(Icons.replay),
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(3),
-              onPressed: onAction == null
-                  ? null
-                  : () => onAction!(TreeTileAction.inWorkPressed, entry.node),
-            ),
-          if (!entry.node.isLeaf)
-            FolderButton(
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(3),
-              openedIcon: const Icon(Icons.expand_more),
-              closedIcon: const Icon(Icons.chevron_right),
-              isOpen: entry.node.isLeaf ? null : entry.isExpanded,
-              onPressed: () =>
-                  onAction!(TreeTileAction.expandPressed, entry.node),
-            ),
           if (!isReadOnly)
-            IconButton(
-              icon: const Icon(Icons.add),
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(3),
-              onPressed: onAction == null
-                  ? null
-                  : () => onAction!(TreeTileAction.addPressed, entry.node),
+            PopupMenuButton<TreeTileMenuOption>(
+              onSelected: (menuOption) => (switch (menuOption) {
+                TreeTileMenuOption.addTask =>
+                  onAction!(TreeTileAction.addPressed, entry.node),
+                TreeTileMenuOption.reopenTask =>
+                  onAction!(TreeTileAction.reopenPressed, entry.node),
+                TreeTileMenuOption.removeTask =>
+                  onAction!(TreeTileAction.removePressed, entry.node),
+              }),
+              child: const Icon(Icons.more_vert),
+              itemBuilder: (context) => <PopupMenuEntry<TreeTileMenuOption>>[
+                if (entry.node.status == TaskStatus.inWork)
+                  const PopupMenuItem<TreeTileMenuOption>(
+                    value: TreeTileMenuOption.reopenTask,
+                    child: Text('Переоткрыть'),
+                  ),
+                const PopupMenuItem<TreeTileMenuOption>(
+                  value: TreeTileMenuOption.addTask,
+                  child: Text('Добавить подзадачу'),
+                ),
+                const PopupMenuItem<TreeTileMenuOption>(
+                  value: TreeTileMenuOption.removeTask,
+                  child: Text('Удалить'),
+                ),
+              ],
             ),
         ],
       ),

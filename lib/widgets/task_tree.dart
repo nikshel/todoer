@@ -95,11 +95,8 @@ class _TaskTreeViewState extends State<TaskTreeView> {
       case TreeTileAction.statusSwitchPressed:
         await treeCubit.setTaskStatus(task.id, nextStatus[task.status]!);
 
-      case TreeTileAction.inWorkPressed:
-        var nextStatus = task.status == TaskStatus.inWork
-            ? TaskStatus.open
-            : TaskStatus.inWork;
-        await treeCubit.setTaskStatus(task.id, nextStatus);
+      case TreeTileAction.reopenPressed:
+        await treeCubit.setTaskStatus(task.id, TaskStatus.open);
 
       case TreeTileAction.addPressed:
         treeController.expand(task);
@@ -120,6 +117,9 @@ class _TaskTreeViewState extends State<TaskTreeView> {
             );
           }
         }
+
+      case TreeTileAction.removePressed:
+        await treeCubit.removeTask(task.id);
 
       default:
         throw Exception('Unknown action $action');
