@@ -45,5 +45,8 @@ final List<String> migrations = [
   INSERT INTO groups (title, system_type) VALUES ('Сегодня', 'today'), ('Неделя', 'week');
 
   ALTER TABLE tasks ADD COLUMN groups_ids TEXT;
+  ''',
   '''
+  INSERT INTO groups (title, system_type) VALUES ('Ожидание', 'waiting');
+  ''',
 ];

@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 enum GroupSystemType {
   today,
   week,
+  waiting,
 }
 
 class Group extends Equatable {

@@ -24,6 +24,7 @@ class _MyHomePageState extends State<MyHomePage> {
   static Map<GroupSystemType, IconData> groupIcons = {
     GroupSystemType.today: Icons.today,
     GroupSystemType.week: Icons.calendar_month,
+    GroupSystemType.waiting: Icons.hourglass_empty,
   };
 
   @override
