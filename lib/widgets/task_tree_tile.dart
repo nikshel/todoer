@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_fancy_tree_view/flutter_fancy_tree_view.dart';
 import 'package:todoer/models/task.dart';
+import 'package:todoer/widgets/task_tree_tile_menu.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import 'utils.dart';
@@ -185,33 +186,20 @@ class TreeTile extends StatelessWidget {
               ),
               icon: const Icon(Icons.link),
             ),
-          if (!isReadOnly)
-            PopupMenuButton<TreeTileMenuOption>(
-              onSelected: (menuOption) => (switch (menuOption) {
-                TreeTileMenuOption.addTask =>
-                  onAction!(TreeTileAction.addPressed, entry.node),
-                TreeTileMenuOption.reopenTask =>
-                  onAction!(TreeTileAction.reopenPressed, entry.node),
-                TreeTileMenuOption.removeTask =>
-                  onAction!(TreeTileAction.removePressed, entry.node),
-              }),
-              child: const Icon(Icons.more_vert),
-              itemBuilder: (context) => <PopupMenuEntry<TreeTileMenuOption>>[
-                if (entry.node.status == TaskStatus.inWork)
-                  const PopupMenuItem<TreeTileMenuOption>(
-                    value: TreeTileMenuOption.reopenTask,
-                    child: Text('Переоткрыть'),
-                  ),
-                const PopupMenuItem<TreeTileMenuOption>(
-                  value: TreeTileMenuOption.addTask,
-                  child: Text('Добавить подзадачу'),
-                ),
-                const PopupMenuItem<TreeTileMenuOption>(
-                  value: TreeTileMenuOption.removeTask,
-                  child: Text('Удалить'),
-                ),
-              ],
-            ),
+          TaskTreeTileMenuButton(
+            showReopenOption: entry.node.status == TaskStatus.inWork,
+            showAddOption: !isReadOnly,
+            onOptionSelected: (menuOption) => (switch (menuOption) {
+              TaskTreeTileMenuOption.add =>
+                onAction!(TreeTileAction.addPressed, entry.node),
+              TaskTreeTileMenuOption.edit =>
+                onAction!(TreeTileAction.editPressed, entry.node),
+              TaskTreeTileMenuOption.reopen =>
+                onAction!(TreeTileAction.reopenPressed, entry.node),
+              TaskTreeTileMenuOption.remove =>
+                onAction!(TreeTileAction.removePressed, entry.node),
+            }),
+          ),
         ],
       ),
     );
