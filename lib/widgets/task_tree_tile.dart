@@ -151,16 +151,18 @@ class TreeTile extends StatelessWidget {
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Text(
-                    entry.node.title,
-                    style: TextStyle(
-                        fontSize: 15,
-                        decoration: entry.node.status == TaskStatus.done
-                            ? TextDecoration.lineThrough
-                            : null,
-                        color: entry.node.status == TaskStatus.done
-                            ? Colors.grey
-                            : null),
+                  Flexible(
+                    child: Text(
+                      entry.node.title,
+                      style: TextStyle(
+                          fontSize: 15,
+                          decoration: entry.node.status == TaskStatus.done
+                              ? TextDecoration.lineThrough
+                              : null,
+                          color: entry.node.status == TaskStatus.done
+                              ? Colors.grey
+                              : null),
+                    ),
                   ),
                   if (!entry.node.isLeaf)
                     FolderButton(
