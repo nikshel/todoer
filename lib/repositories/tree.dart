@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:todoer/models/group.dart';
 import 'package:todoer/models/task.dart';
@@ -8,10 +7,10 @@ import 'package:todoer/models/task.dart';
 const tasksTable = 'tasks';
 const groupsTable = 'groups';
 
-class TreeStorage extends ChangeNotifier {
+class TreeRepository {
   final Database _db;
 
-  TreeStorage(this._db);
+  TreeRepository(this._db);
 
   Future<List<Task>> getRoots() async {
     var groups = await getGroups();
@@ -73,8 +72,6 @@ class TreeStorage extends ChangeNotifier {
         'groups_ids': _serializeGroups(groups),
       });
     }, exclusive: true);
-
-    notifyListeners();
   }
 
   Future<void> updateTask(
@@ -95,8 +92,6 @@ class TreeStorage extends ChangeNotifier {
       where: 'id = ?',
       whereArgs: [taskId],
     );
-
-    notifyListeners();
   }
 
   Future<void> setTaskStatus(int taskId, TaskStatus status) async {
@@ -123,8 +118,6 @@ class TreeStorage extends ChangeNotifier {
       where: where,
       whereArgs: args,
     );
-
-    notifyListeners();
   }
 
   (String, List<Object?>) _getOpenQuery(int taskId) {
@@ -166,7 +159,6 @@ class TreeStorage extends ChangeNotifier {
         WHERE parent_id IS ? AND idx > ?
       ''', [parentId, idx]); // todo shifts
     });
-    notifyListeners();
   }
 
   Future<void> moveTask(int taskId, int? newParentId, int newIdx) async {
@@ -217,8 +209,6 @@ class TreeStorage extends ChangeNotifier {
             ''', [newParentId, newIdx, taskId]);
       await batch.apply(noResult: true);
     }, exclusive: true);
-
-    notifyListeners();
   }
 
   (String, List<Object?>) _getOwnWithChildrenIdsQuery(int taskId) {

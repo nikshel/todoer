@@ -35,7 +35,6 @@ class DragAndDropTreeTile extends StatelessWidget {
       width: indentGuide is AbstractLineGuide ? indentGuide.thickness : 2.0,
     );
 
-    // var storage = Provider.of<TreeStorage>(context, listen: false);
     return TreeDragTarget<Task>(
       node: entry.node,
       onNodeAccepted: onNodeAccepted,

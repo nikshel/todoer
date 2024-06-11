@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_fancy_tree_view/flutter_fancy_tree_view.dart';
 import 'package:provider/provider.dart';
-import 'package:todoer/models/storage.dart';
+import 'package:todoer/blocs/tree.dart';
 import 'package:todoer/models/task.dart';
 
 import 'task_tree_tile.dart';
@@ -9,8 +9,8 @@ import 'utils.dart';
 
 bool allow(Task _) => true;
 
-class DragAndDropTreeView extends StatefulWidget {
-  const DragAndDropTreeView({
+class TaskTreeView extends StatefulWidget {
+  const TaskTreeView({
     super.key,
     this.isReadOnly = false,
     this.shouldShow = allow,
@@ -22,13 +22,12 @@ class DragAndDropTreeView extends StatefulWidget {
   final bool isReadOnly;
 
   @override
-  State<DragAndDropTreeView> createState() => _DragAndDropTreeViewState();
+  State<TaskTreeView> createState() => _TaskTreeViewState();
 }
 
-class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
-  TreeController<Task>? treeController;
-  late TreeStorage storage;
-  Task? expandOnUpdate;
+class _TaskTreeViewState extends State<TaskTreeView> {
+  late TreeController<Task> treeController;
+  late TreeCubit treeCubit;
 
   static final nextStatus = <TaskStatus, TaskStatus>{
     TaskStatus.open: TaskStatus.inWork,
@@ -36,37 +35,33 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
     TaskStatus.done: TaskStatus.open,
   };
 
+  _TaskTreeViewState() {
+    treeController = TreeController<Task>(
+      roots: [],
+      childrenProvider: (Task node) => node.children.where(widget.shouldShow),
+      parentProvider: (Task node) => node.parent,
+      defaultExpansionState: true,
+    );
+  }
+
   @override
   Future<void> didChangeDependencies() async {
     super.didChangeDependencies();
 
-    storage = Provider.of<TreeStorage>(context);
-    var roots = await storage.getRoots();
-
-    if (treeController == null) {
-      setState(() {
-        treeController = TreeController<Task>(
-          roots: roots.where(widget.shouldShow),
-          childrenProvider: (Task node) =>
-              node.children.where(widget.shouldShow),
-          parentProvider: (Task node) => node.parent,
-        );
-        treeController!.expandAll();
-      });
-    } else {
-      setState(() {
-        treeController!.roots = roots.where(widget.shouldShow);
-      });
-    }
+    treeCubit = context.watch<TreeCubit>();
+    var roots = treeCubit.state.rootTasks.where(widget.shouldShow);
+    setState(() {
+      treeController.roots = roots;
+    });
   }
 
   @override
   void dispose() {
-    treeController?.dispose();
+    treeController.dispose();
     super.dispose();
   }
 
-  void onNodeAccepted(TreeDragAndDropDetails<Task> details) async {
+  void _onNodeAccepted(TreeDragAndDropDetails<Task> details) async {
     Task? newParent;
     int newIndex = 0;
 
@@ -81,13 +76,6 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
         // Insert the dragged node as the last child of the target node.
         newParent = details.targetNode;
         newIndex = details.targetNode.children.length;
-
-        // Ensure that the dragged node is visible after reordering.
-
-        expandOnUpdate = details.targetNode;
-        // setState(() {
-        // treeController!.setExpansionState(details.targetNode, true);
-        // });
       },
       whenBelow: () {
         // Insert the dragged node as the next sibling of the target node.
@@ -96,34 +84,34 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
       },
     );
 
-    await storage.moveTask(details.draggedNode.id, newParent?.id, newIndex);
+    await treeCubit.moveTask(details.draggedNode.id, newParent?.id, newIndex);
   }
 
-  void onTileAction(TreeTileAction action, Task task) async {
+  void _onTileAction(TreeTileAction action, Task task) async {
     switch (action) {
       case TreeTileAction.expandPressed:
-        treeController!.toggleExpansion(task);
+        treeController.toggleExpansion(task);
 
       case TreeTileAction.statusSwitchPressed:
-        await storage.setTaskStatus(task.id, nextStatus[task.status]!);
+        await treeCubit.setTaskStatus(task.id, nextStatus[task.status]!);
 
       case TreeTileAction.inWorkPressed:
         var nextStatus = task.status == TaskStatus.inWork
             ? TaskStatus.open
             : TaskStatus.inWork;
-        await storage.setTaskStatus(task.id, nextStatus);
+        await treeCubit.setTaskStatus(task.id, nextStatus);
 
       case TreeTileAction.addPressed:
-        treeController!.expand(task);
+        treeController.expand(task);
         widget.onAddPressed(task);
 
       case TreeTileAction.editPressed:
         var formResult = await showTaskForm(context, task);
         if (formResult != null && context.mounted) {
           if (formResult.containsKey('delete')) {
-            await storage.removeTask(task.id);
+            await treeCubit.removeTask(task.id);
           } else {
-            await storage.updateTask(
+            await treeCubit.updateTask(
               task.id,
               title: formResult['title'],
               isProject: formResult['isProject'],
@@ -140,12 +128,8 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
 
   @override
   Widget build(BuildContext context) {
-    if (treeController == null) {
-      return const SizedBox.shrink();
-    }
-
     return AnimatedTreeView<Task>(
-      treeController: treeController!,
+      treeController: treeController,
       transitionBuilder: (context, child, animation) => SizeTransition(
         sizeFactor: animation,
         axisAlignment: 1,
@@ -156,8 +140,8 @@ class _DragAndDropTreeViewState extends State<DragAndDropTreeView> {
         return DragAndDropTreeTile(
           entry: entry,
           isReadOnly: widget.isReadOnly,
-          onNodeAccepted: onNodeAccepted,
-          onAction: onTileAction,
+          onNodeAccepted: _onNodeAccepted,
+          onAction: _onTileAction,
         );
       },
     );

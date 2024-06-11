@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:todoer/models/storage.dart';
+import 'package:todoer/blocs/tree.dart';
 import 'package:todoer/models/task.dart';
 import 'package:todoer/widgets/task_tree.dart';
 import 'package:todoer/widgets/utils.dart';
@@ -22,7 +22,7 @@ class TaskTreePage extends StatelessWidget {
       body: KeyboardListener(
         focusNode: FocusNode(),
         autofocus: true,
-        child: DragAndDropTreeView(
+        child: TaskTreeView(
           isReadOnly: isReadOnly,
           shouldShow: (task) =>
               filter == null ||
@@ -44,12 +44,13 @@ class TaskTreePage extends StatelessWidget {
   }
 
   Future<void> createTask(BuildContext context, [int? parentId]) async {
+    var treeCubit = context.read<TreeCubit>();
     var formResult = await showTaskForm(context);
-    if (formResult == null || !context.mounted) {
+    if (formResult == null) {
       return;
     }
-    var tree = Provider.of<TreeStorage>(context, listen: false);
-    await tree.createTask(
+
+    await treeCubit.createTask(
       title: formResult['title'],
       isProject: formResult['isProject'],
       link: formResult['link'],
