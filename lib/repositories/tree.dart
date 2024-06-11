@@ -19,7 +19,7 @@ class TreeRepository {
 
     var tasksById = <int, Task>{};
     for (var rawTask in res) {
-      var task = _makeTask(rawTask);
+      var task = _makeTask(rawTask, groups);
       tasksById[task.id] = task;
     }
 
@@ -36,8 +36,6 @@ class TreeRepository {
       assert(targetChildren.length == task!.index, 'Incorrect task idx');
       task!.parent = parent;
       targetChildren.add(task);
-
-      task.groups = _parseGroups(rawTask['groups_ids'] as String?, groups);
     }
     return roots;
   }
@@ -245,7 +243,7 @@ class TreeRepository {
     );
   }
 
-  Task _makeTask(Map<String, Object?> values) {
+  Task _makeTask(Map<String, Object?> values, List<Group> allGroups) {
     return Task(
       id: values['id'] as int,
       title: values['title'] as String,
@@ -256,6 +254,7 @@ class TreeRepository {
           : DateTime.parse(values['start_since_dt'] as String),
       link: values['link'] == null ? null : values['link'] as String,
       index: values['idx'] as int,
+      groups: _parseGroups(values['groups_ids'] as String?, allGroups),
     );
   }
 

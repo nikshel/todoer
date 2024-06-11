@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'package:todoer/models/group.dart';
 
 enum TaskStatus {
@@ -6,7 +7,7 @@ enum TaskStatus {
   done,
 }
 
-class Task {
+class Task extends Equatable {
   final int id;
   final String title;
   final TaskStatus status;
@@ -15,7 +16,7 @@ class Task {
   final bool isProject;
   final int index;
 
-  List<Group> groups = [];
+  final List<Group> groups;
 
   Task? parent; // TODO late final
   final List<Task> children = [];
@@ -30,6 +31,7 @@ class Task {
     required this.link,
     required this.isProject,
     required this.index,
+    required this.groups,
   });
 
   Iterable<Task> getAllChildren() sync* {
@@ -41,15 +43,10 @@ class Task {
   }
 
   @override
-  bool operator ==(Object other) {
-    return other is Task && other.id == id;
-  }
-
-  @override
-  int get hashCode => id.hashCode;
-
-  @override
   String toString() {
     return 'Task $id "$title" $status ${parent?.id} $index';
   }
+
+  @override
+  List<Object?> get props => [id];
 }
