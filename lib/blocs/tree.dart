@@ -48,6 +48,7 @@ class TreeCubit extends Cubit<TreeState> {
       link: link,
       groups: groups,
     );
+    await _refreshState();
   }
 
   Future<void> setTaskStatus(int taskId, TaskStatus status) async {
