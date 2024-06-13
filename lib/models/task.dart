@@ -7,6 +7,8 @@ enum TaskStatus {
   done,
 }
 
+// TODO fix immutable
+// ignore: must_be_immutable
 class Task extends Equatable {
   final int id;
   final String title;
