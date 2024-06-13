@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_fancy_tree_view/flutter_fancy_tree_view.dart';
+import 'package:todoer/models/group.dart';
 import 'package:todoer/models/task.dart';
 import 'package:todoer/widgets/task_tree_tile_menu.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -140,6 +141,9 @@ class TreeTile extends StatelessWidget {
               padding: EdgeInsets.only(left: 3, right: 7),
               child: Icon(Icons.folder),
             ),
+          if (entry.node.groups
+              .any((g) => g.systemType == GroupSystemType.waiting))
+            const Icon(Icons.hourglass_empty, size: 20),
           Expanded(
             child: GestureDetector(
               onTap: () => onAction!(TreeTileAction.expandPressed, entry.node),
