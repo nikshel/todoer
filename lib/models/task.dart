@@ -44,6 +44,14 @@ class Task extends Equatable {
     }
   }
 
+  Iterable<Task> getAllParents() sync* {
+    if (parent == null) {
+      return;
+    }
+    yield parent!;
+    yield* parent!.getAllParents();
+  }
+
   @override
   String toString() {
     return 'Task $id "$title" $status ${parent?.id} $index';

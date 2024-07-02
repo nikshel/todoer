@@ -97,7 +97,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   ...treeState.groups.map((group) => TaskTreePage(
                         isReadOnly: true,
-                        filter: (task) => task.groups.contains(group),
+                        filter: (task) => [task, ...task.getAllParents()]
+                            .any((t) => t.groups.contains(group)),
                       )),
                   const TaskTreePage(),
                 ],
