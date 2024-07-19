@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_fancy_tree_view/flutter_fancy_tree_view.dart';
 import 'package:todoer/models/group.dart';
 import 'package:todoer/models/task.dart';
-import 'package:todoer/widgets/task_tree_tile_menu.dart';
+import 'package:todoer/widgets/menuable.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import 'utils.dart';
@@ -92,9 +92,10 @@ class DragAndDropTreeTile extends StatelessWidget {
 }
 
 enum TreeTileMenuOption {
-  addTask,
-  reopenTask,
-  removeTask,
+  add,
+  edit,
+  reopen,
+  remove,
 }
 
 class TreeTile extends StatelessWidget {
@@ -120,93 +121,118 @@ class TreeTile extends StatelessWidget {
     TaskStatus.done: Icons.check,
   };
 
+  Offset _getRelativeOffset(
+      BuildContext context, BuildContext parentContext, Offset delta) {
+    return (context.findRenderObject() as RenderBox)
+        .localToGlobal(delta, ancestor: parentContext.findRenderObject());
+  }
+
   @override
   Widget build(BuildContext context) {
-    Widget content = Padding(
-      padding: const EdgeInsetsDirectional.only(end: 8),
-      child: Row(
-        children: [
-          IconButton(
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(4),
-              icon: Icon(icons[entry.node.status]),
-              color:
-                  entry.node.status == TaskStatus.inWork ? Colors.blue : null,
-              onPressed: onAction == null
-                  ? null
-                  : () => onAction!(
-                      TreeTileAction.statusSwitchPressed, entry.node)),
-          if (entry.node.isProject)
-            const Padding(
-              padding: EdgeInsets.only(left: 3, right: 7),
-              child: Icon(Icons.folder),
-            ),
-          if (entry.node.groups
-              .any((g) => g.systemType == GroupSystemType.waiting))
-            const Icon(Icons.hourglass_empty, size: 20),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => onAction!(TreeTileAction.expandPressed, entry.node),
-              onDoubleTap: () => onAction == null
-                  ? null
-                  : onAction!(TreeTileAction.editPressed, entry.node),
-              behavior: HitTestBehavior.translucent,
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Flexible(
-                    child: Text(
-                      entry.node.title,
-                      style: TextStyle(
-                          fontSize: 15,
-                          decoration: entry.node.status == TaskStatus.done
-                              ? TextDecoration.lineThrough
-                              : null,
-                          color: entry.node.status == TaskStatus.done
-                              ? Colors.grey
-                              : null),
-                    ),
-                  ),
-                  if (!entry.node.isLeaf)
-                    FolderButton(
-                      constraints: const BoxConstraints(),
-                      padding: const EdgeInsets.all(3),
-                      openedIcon: const Icon(Icons.expand_more),
-                      closedIcon: const Icon(Icons.chevron_right),
-                      isOpen: entry.node.isLeaf ? null : entry.isExpanded,
-                      onPressed: () =>
-                          onAction!(TreeTileAction.expandPressed, entry.node),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          if (entry.node.link != null)
+    Widget content = Menuable<TreeTileMenuOption>(
+      options: [
+        if (!isReadOnly)
+          (TreeTileMenuOption.add, Icons.add, 'Добавить подзадачу'),
+        if (entry.node.status == TaskStatus.inWork)
+          (TreeTileMenuOption.reopen, Icons.replay, 'Переоткрыть'),
+        (TreeTileMenuOption.edit, Icons.edit, 'Редактировать'),
+        (TreeTileMenuOption.remove, Icons.delete, 'Удалить'),
+      ],
+      onOptionSelected: (menuOption) => (switch (menuOption) {
+        TreeTileMenuOption.add =>
+          onAction!(TreeTileAction.addPressed, entry.node),
+        TreeTileMenuOption.edit =>
+          onAction!(TreeTileAction.editPressed, entry.node),
+        TreeTileMenuOption.reopen =>
+          onAction!(TreeTileAction.reopenPressed, entry.node),
+        TreeTileMenuOption.remove =>
+          onAction!(TreeTileAction.removePressed, entry.node),
+      }),
+      builder: (context, openMenu) => Padding(
+        padding: const EdgeInsetsDirectional.only(end: 8),
+        child: Row(
+          children: [
             IconButton(
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(3),
-              onPressed: () => launchUrlString(
-                entry.node.link!,
-                mode: LaunchMode.platformDefault,
+                constraints: const BoxConstraints(),
+                padding: const EdgeInsets.all(4),
+                icon: Icon(icons[entry.node.status]),
+                color:
+                    entry.node.status == TaskStatus.inWork ? Colors.blue : null,
+                onPressed: onAction == null
+                    ? null
+                    : () => onAction!(
+                        TreeTileAction.statusSwitchPressed, entry.node)),
+            if (entry.node.isProject)
+              const Padding(
+                padding: EdgeInsets.only(left: 3, right: 7),
+                child: Icon(Icons.folder),
               ),
-              icon: const Icon(Icons.link),
+            if (entry.node.groups
+                .any((g) => g.systemType == GroupSystemType.waiting))
+              const Icon(Icons.hourglass_empty, size: 20),
+            Expanded(
+              child: GestureDetector(
+                onTap: () =>
+                    onAction!(TreeTileAction.expandPressed, entry.node),
+                onDoubleTap: () => onAction == null
+                    ? null
+                    : onAction!(TreeTileAction.editPressed, entry.node),
+                behavior: HitTestBehavior.translucent,
+                child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        entry.node.title,
+                        style: TextStyle(
+                            fontSize: 15,
+                            decoration: entry.node.status == TaskStatus.done
+                                ? TextDecoration.lineThrough
+                                : null,
+                            color: entry.node.status == TaskStatus.done
+                                ? Colors.grey
+                                : null),
+                      ),
+                    ),
+                    if (!entry.node.isLeaf)
+                      FolderButton(
+                        constraints: const BoxConstraints(),
+                        padding: const EdgeInsets.all(3),
+                        openedIcon: const Icon(Icons.expand_more),
+                        closedIcon: const Icon(Icons.chevron_right),
+                        isOpen: entry.node.isLeaf ? null : entry.isExpanded,
+                        onPressed: () =>
+                            onAction!(TreeTileAction.expandPressed, entry.node),
+                      ),
+                  ],
+                ),
+              ),
             ),
-          TaskTreeTileMenuButton(
-            showReopenOption: entry.node.status == TaskStatus.inWork,
-            showAddOption: !isReadOnly,
-            onOptionSelected: (menuOption) => (switch (menuOption) {
-              TaskTreeTileMenuOption.add =>
-                onAction!(TreeTileAction.addPressed, entry.node),
-              TaskTreeTileMenuOption.edit =>
-                onAction!(TreeTileAction.editPressed, entry.node),
-              TaskTreeTileMenuOption.reopen =>
-                onAction!(TreeTileAction.reopenPressed, entry.node),
-              TaskTreeTileMenuOption.remove =>
-                onAction!(TreeTileAction.removePressed, entry.node),
-            }),
-          ),
-        ],
+            if (entry.node.link != null)
+              IconButton(
+                constraints: const BoxConstraints(),
+                padding: const EdgeInsets.all(3),
+                onPressed: () => launchUrlString(
+                  entry.node.link!,
+                  mode: LaunchMode.platformDefault,
+                ),
+                icon: const Icon(Icons.link),
+              ),
+            Builder(
+              builder: (currentContext) => IconButton(
+                constraints: const BoxConstraints(),
+                padding: const EdgeInsets.all(3),
+                onPressed: () => openMenu(_getRelativeOffset(
+                  currentContext,
+                  context,
+                  const Offset(0, 30),
+                )),
+                icon: const Icon(Icons.more_vert),
+              ),
+            )
+          ],
+        ),
       ),
     );
 
