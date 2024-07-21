@@ -4,16 +4,49 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:todoer/models/group.dart';
 import 'package:todoer/models/task.dart';
 
-class TaskForm extends StatelessWidget {
-  final _formKey = GlobalKey<FormBuilderState>();
+class TaskForm extends StatefulWidget {
   final Task? currentTask;
   final List<Group> groups;
 
-  TaskForm({
+  const TaskForm({
     super.key,
     this.currentTask,
     required this.groups,
   });
+
+  @override
+  State<TaskForm> createState() => _TaskFormState();
+}
+
+class _TaskFormState extends State<TaskForm> {
+  final _formKey = GlobalKey<FormBuilderState>();
+  late List<Group> _lastGroups;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastGroups = widget.currentTask?.groups ?? [];
+  }
+
+  _patchGroups(List<Group> newGroups) {
+    var todayGroupAdded =
+        !_lastGroups.any((g) => g.systemType == GroupSystemType.today) &&
+            newGroups.any((g) => g.systemType == GroupSystemType.today);
+    var hasWeekGroup =
+        newGroups.any((g) => g.systemType == GroupSystemType.week);
+    if (todayGroupAdded && !hasWeekGroup) {
+      newGroups.add(widget.groups.firstWhere(
+        (g) => g.systemType == GroupSystemType.week,
+      ));
+    }
+
+    var weekGroupRemoved =
+        _lastGroups.any((g) => g.systemType == GroupSystemType.week) &&
+            !newGroups.any((g) => g.systemType == GroupSystemType.week);
+    if (weekGroupRemoved) {
+      newGroups.removeWhere((g) => g.systemType == GroupSystemType.today);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,24 +66,32 @@ class TaskForm extends StatelessWidget {
               textInputAction: TextInputAction.send,
               autofocus: true,
               valueTransformer: (value) => value?.trim(),
-              initialValue: currentTask?.title,
+              initialValue: widget.currentTask?.title,
               onSubmitted: (_) => submit(context),
             ),
             FormBuilderCheckbox(
               name: 'isProject',
               title: const Text('Сделать проектом'),
-              initialValue: currentTask?.isProject ?? false,
+              initialValue: widget.currentTask?.isProject ?? false,
             ),
-            FormBuilderFilterChip(
+            FormBuilderFilterChip<Group>(
               name: 'groups',
-              options: groups
+              showCheckmark: false,
+              options: widget.groups
                   .map((group) => FormBuilderChipOption(
-                        value: group.id,
+                        value: group,
                         child: Text(group.title),
                       ))
                   .toList(),
-              initialValue: currentTask?.groups.map((g) => g.id).toList(),
               spacing: 5,
+              initialValue: widget.currentTask?.groups ?? [],
+              onChanged: (values) {
+                _patchGroups(values!);
+                setState(() {
+                  _lastGroups = values;
+                });
+              },
+              valueTransformer: (values) => values!.map((g) => g.id).toList(),
             ),
             FormBuilderTextField(
               name: 'link',
@@ -62,7 +103,7 @@ class TaskForm extends StatelessWidget {
               ),
               textInputAction: TextInputAction.send,
               valueTransformer: (value) => value?.trim() ?? '',
-              initialValue: currentTask?.link,
+              initialValue: widget.currentTask?.link,
             ),
             const SizedBox(
               height: 20,
@@ -73,20 +114,21 @@ class TaskForm extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  if (currentTask != null)
+                  if (widget.currentTask != null)
                     FilledButton.tonal(
                       onPressed: () => submit(context, delete: true),
                       style: ButtonStyle(
                           foregroundColor:
-                              MaterialStateProperty.all(Colors.white),
-                          backgroundColor: MaterialStateProperty.all(
+                              WidgetStateProperty.all(Colors.white),
+                          backgroundColor: WidgetStateProperty.all(
                               const Color.fromARGB(255, 224, 86, 77))),
                       child: const Text('Удалить'),
                     ),
-                  if (currentTask != null) const SizedBox(width: 10),
+                  if (widget.currentTask != null) const SizedBox(width: 10),
                   FilledButton.tonal(
                     onPressed: () => submit(context),
-                    child: Text(currentTask == null ? 'Создать' : 'Обновить'),
+                    child: Text(
+                        widget.currentTask == null ? 'Создать' : 'Обновить'),
                   ),
                 ],
               ),
@@ -110,7 +152,7 @@ class TaskForm extends StatelessWidget {
         }
 
         values['groups'] = ((values['groups'] as List<int>?) ?? [])
-            .map((id) => groups.firstWhere((g) => g.id == id))
+            .map((id) => widget.groups.firstWhere((g) => g.id == id))
             .toList();
 
         Navigator.pop(context, values);
