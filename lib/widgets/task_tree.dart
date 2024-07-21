@@ -136,6 +136,7 @@ class _TaskTreeViewState extends State<TaskTreeView> {
         child: child,
       ),
       duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.only(bottom: 100),
       nodeBuilder: (BuildContext context, TreeEntry<Task> entry) {
         return DragAndDropTreeTile(
           entry: entry,

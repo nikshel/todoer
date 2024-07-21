@@ -36,10 +36,12 @@ class TaskTreePage extends StatelessWidget {
           }
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () async => await createTask(context),
-      ),
+      floatingActionButton: isReadOnly
+          ? null
+          : FloatingActionButton(
+              child: const Icon(Icons.add),
+              onPressed: () async => await createTask(context),
+            ),
     );
   }
 
