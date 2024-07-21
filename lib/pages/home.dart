@@ -6,6 +6,7 @@ import 'package:todoer/blocs/tree.dart';
 import 'package:todoer/models/group.dart';
 import 'package:todoer/models/task.dart';
 import 'package:todoer/pages/task_tree.dart';
+import 'package:todoer/widgets/update_checker.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -47,6 +48,7 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text('Todoer v$appVersion'),
+        actions: [UpdateChecker(currentTag: appVersion)],
       ),
       body: BlocBuilder<TreeCubit, TreeState>(
         builder: (context, treeState) => Row(
