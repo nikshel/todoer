@@ -42,13 +42,38 @@ class _MyHomePageState extends State<MyHomePage> {
         }));
   }
 
+  _showHelp() {
+    showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: const Text('Управление'),
+              content: const Text("""
+- Один клик по задаче открывает или закрывает поддерево
+- Двойной клик по задаче открывает редактор задачи
+- Клик с удержаением на задачe включает drag-and-drop
+- Клик ПКМ по задаче открывает контекстное меню
+- Клик по иконке статуса задачи меняет статус по циклу open->inwork->close->open.
+  При этом корректируются статусы дочерних и родительских задач, чтобы не было противоречий.
+  Перейти из inwork в open можно через меню задачи
+              """),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('OK'))
+              ],
+            ));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text('Todoer v$appVersion'),
-        actions: [UpdateChecker(currentTag: appVersion)],
+        actions: [
+          UpdateChecker(currentTag: appVersion),
+          IconButton(icon: const Icon(Icons.help_outline), onPressed: _showHelp)
+        ],
       ),
       body: BlocBuilder<TreeCubit, TreeState>(
         builder: (context, treeState) => Row(
