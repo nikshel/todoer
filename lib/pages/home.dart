@@ -70,6 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text('Todoer v$appVersion'),
+        centerTitle: true,
         actions: [
           UpdateChecker(currentTag: appVersion),
           IconButton(icon: const Icon(Icons.help_outline), onPressed: _showHelp)
