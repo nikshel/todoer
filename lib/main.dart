@@ -2,17 +2,19 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:window_manager/window_manager.dart';
+
 import 'package:todoer/blocs/tree.dart';
 import 'package:todoer/db/open.dart';
 import 'package:todoer/repositories/tree.dart';
-import 'package:window_manager/window_manager.dart';
+import 'package:todoer/utils.dart';
 
 import 'pages/home.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (Platform.isMacOS || Platform.isLinux || Platform.isWindows) {
+  if (isDesktop) {
     await windowManager.ensureInitialized();
     windowManager.waitUntilReadyToShow(
       const WindowOptions(

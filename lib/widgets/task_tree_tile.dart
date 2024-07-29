@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_fancy_tree_view/flutter_fancy_tree_view.dart';
+import 'package:url_launcher/url_launcher_string.dart';
+
 import 'package:todoer/models/group.dart';
 import 'package:todoer/models/task.dart';
+import 'package:todoer/utils.dart';
 import 'package:todoer/widgets/menuable.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 
 import 'utils.dart';
 
@@ -219,18 +221,19 @@ class TreeTile extends StatelessWidget {
                 ),
                 icon: const Icon(Icons.link),
               ),
-            Builder(
-              builder: (currentContext) => IconButton(
-                constraints: const BoxConstraints(),
-                padding: const EdgeInsets.all(3),
-                onPressed: () => openMenu(_getRelativeOffset(
-                  currentContext,
-                  context,
-                  const Offset(0, 30),
-                )),
-                icon: const Icon(Icons.more_vert),
-              ),
-            )
+            if (!isDesktop)
+              Builder(
+                builder: (currentContext) => IconButton(
+                  constraints: const BoxConstraints(),
+                  padding: const EdgeInsets.all(3),
+                  onPressed: () => openMenu(_getRelativeOffset(
+                    currentContext,
+                    context,
+                    const Offset(0, 30),
+                  )),
+                  icon: const Icon(Icons.more_vert),
+                ),
+              )
           ],
         ),
       ),
