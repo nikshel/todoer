@@ -18,30 +18,30 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
 
-  build-windows:
-    needs: [get-version]
-    runs-on: windows-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install yq
-        uses: dcarbone/install-yq-action@v1.1.1
-      - name: Setup flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          flutter-version-file: pubspec.yaml
-      - name: Install dependencies
-        run: flutter pub get
-      - name: Build
-        run: flutter build windows --release --dart-define-from-file=configs/production.env --build-name=${{ needs.get-version.outputs.version }}
-      - name: Create archieve
-        run: Compress-Archive -Path ./build/windows/x64/runner/Release/* -Destination todoer-windows.zip
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-windows
-          path: todoer-windows.zip
+  # build-windows:
+  #   needs: [get-version]
+  #   runs-on: windows-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #     - name: Install yq
+  #       uses: dcarbone/install-yq-action@v1.1.1
+  #     - name: Setup flutter
+  #       uses: subosito/flutter-action@v2
+  #       with:
+  #         channel: 'stable'
+  #         flutter-version-file: pubspec.yaml
+  #     - name: Install dependencies
+  #       run: flutter pub get
+  #     - name: Build
+  #       run: flutter build windows --release --dart-define-from-file=configs/production.env --build-name=${{ needs.get-version.outputs.version }}
+  #     - name: Create archieve
+  #       run: Compress-Archive -Path ./build/windows/x64/runner/Release/* -Destination todoer-windows.zip
+  #     - name: Upload build artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: release-windows
+  #         path: todoer-windows.zip
 
   build-macos:
     needs: [get-version]
@@ -49,6 +49,42 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Install the Apple certificate and provisioning profile
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: '1234'
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_CODESIGN_IDENTITY: ${{ secrets.APPLE_CODESIGN_IDENTITY }}
+        run: |
+          # create variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          PP_PATH=$RUNNER_TEMP/build_pp.provisionprofile
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          # import certificate and provisioning profile from secrets
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+          echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+
+          # create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # import certificate to keychain
+          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          # apply provisioning profile
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+
+          # create creds for notarize
+          xcrun notarytool store-credentials notarytool-password --apple-id $APPLE_ID --team-id $APPLE_TEAM_ID --password $APP_PASSWORD
       - name: Setup flutter
         uses: subosito/flutter-action@v2
         with:
@@ -61,55 +97,55 @@ jobs:
       - name: Install create-dmg
         run: HOMEBREW_NO_AUTO_UPDATE=1 brew install create-dmg
       - name: Create dmg
-        run: create-dmg todoer-macos.dmg build/macos/Build/Products/Release/todoer.app
+        run: create-dmg --codesign "$APPLE_CODESIGN_IDENTITY" --notarize notarytool-password todoer-macos.dmg build/macos/Build/Products/Release/todoer.app
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-macos
           path: todoer-macos.dmg
 
-  build-linux:
-    needs: [get-version]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install build tools
-        run: |
-          sudo apt update
-          sudo apt install \
-            clang cmake \
-            ninja-build pkg-config \
-            libgtk-3-dev liblzma-dev \
-            libstdc++-12-dev
-      - name: Setup flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          flutter-version-file: pubspec.yaml
-      - name: Install dependencies
-        run: flutter pub get
-      - name: Build
-        run: flutter build linux --release --dart-define-from-file=configs/production.env --build-name=${{ needs.get-version.outputs.version }}
-      - name: Create archieve
-        uses: a7ul/tar-action@v1.1.0
-        with:
-          command: c
-          cwd: ./build/linux/x64/release/bundle
-          files: ./
-          outPath: todoer-linux.tar.gz
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-linux
-          path: todoer-linux.tar.gz
+  # build-linux:
+  #   needs: [get-version]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #     - name: Install build tools
+  #       run: |
+  #         sudo apt update
+  #         sudo apt install \
+  #           clang cmake \
+  #           ninja-build pkg-config \
+  #           libgtk-3-dev liblzma-dev \
+  #           libstdc++-12-dev
+  #     - name: Setup flutter
+  #       uses: subosito/flutter-action@v2
+  #       with:
+  #         channel: 'stable'
+  #         flutter-version-file: pubspec.yaml
+  #     - name: Install dependencies
+  #       run: flutter pub get
+  #     - name: Build
+  #       run: flutter build linux --release --dart-define-from-file=configs/production.env --build-name=${{ needs.get-version.outputs.version }}
+  #     - name: Create archieve
+  #       uses: a7ul/tar-action@v1.1.0
+  #       with:
+  #         command: c
+  #         cwd: ./build/linux/x64/release/bundle
+  #         files: ./
+  #         outPath: todoer-linux.tar.gz
+  #     - name: Upload build artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: release-linux
+  #         path: todoer-linux.tar.gz
 
   release:
     needs:
       - get-version
-      - build-windows
+      # - build-windows
       - build-macos
-      - build-linux
+      # - build-linux
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -142,15 +178,15 @@ jobs:
           release_name: Release ${{ needs.get-version.outputs.version }}
           body: ${{ steps.changes.outputs.log }}
 
-      - name: Upload windows asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: ./todoer-windows.zip
-          asset_name: todoer-${{ needs.get-version.outputs.version }}-windows.zip
-          asset_content_type: application/zip
+      # - name: Upload windows asset
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create-release.outputs.upload_url }}
+      #     asset_path: ./todoer-windows.zip
+      #     asset_name: todoer-${{ needs.get-version.outputs.version }}-windows.zip
+      #     asset_content_type: application/zip
 
       - name: Upload macos asset
         uses: actions/upload-release-asset@v1
@@ -162,12 +198,12 @@ jobs:
           asset_name: todoer-${{ needs.get-version.outputs.version }}-macos.dmg
           asset_content_type: application/octet-stream
 
-      - name: Upload linux asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: ./todoer-linux.tar.gz
-          asset_name: todoer-${{ needs.get-version.outputs.version }}-linux-x64.tar.gz
-          asset_content_type: application/octet-stream
+      # - name: Upload linux asset
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create-release.outputs.upload_url }}
+      #     asset_path: ./todoer-linux.tar.gz
+      #     asset_name: todoer-${{ needs.get-version.outputs.version }}-linux-x64.tar.gz
+      #     asset_content_type: application/octet-stream
