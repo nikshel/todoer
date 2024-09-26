@@ -2,25 +2,31 @@ import 'package:equatable/equatable.dart';
 import 'package:todoer/models/group.dart';
 
 enum TaskStatus {
-  open,
-  inWork,
-  done,
+  open('open'),
+  inWork('in_work'),
+  done('done');
+
+  final String value;
+
+  const TaskStatus(this.value);
 }
 
-// TODO fix immutable
-// ignore: must_be_immutable
+TaskStatus statusFromStr(String str) {
+  if (str == 'in_work') return TaskStatus.inWork;
+  return TaskStatus.values.byName(str);
+}
+
 class Task extends Equatable {
   final int id;
   final String title;
   final TaskStatus status;
-  final DateTime? startSince;
   final String? link;
   final bool isProject;
   final int index;
 
   final List<Group> groups;
 
-  Task? parent; // TODO late final
+  final Task? parent;
   final List<Task> children = [];
 
   bool get isLeaf => children.isEmpty;
@@ -29,10 +35,10 @@ class Task extends Equatable {
     required this.id,
     required this.title,
     required this.status,
-    required this.startSince,
     required this.link,
     required this.isProject,
     required this.index,
+    required this.parent,
     required this.groups,
   });
 

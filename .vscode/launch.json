@@ -1,0 +1,28 @@
+{
+    "configurations": [
+        {
+            "name": "dev",
+            "program": "lib/main.dart",
+            "deviceId": "macos",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "debug",
+            "args": [
+                "--dart-define-from-file",
+                "configs/dev.env"
+            ]
+        },
+        {
+            "name": "production",
+            "program": "lib/main.dart",
+            "deviceId": "macos",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "debug",
+            "args": [
+                "--dart-define-from-file",
+                "configs/production.env"
+            ]
+        }
+    ]
+}
