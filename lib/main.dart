@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:event_bus/event_bus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,6 +20,11 @@ void main() async {
 
   if (isDesktop) {
     await windowManager.ensureInitialized();
+
+    if (Platform.isWindows) {
+      registerWindowsScheme('todoer');
+    }
+
     windowManager.waitUntilReadyToShow(
       const WindowOptions(
         size: Size(800, 800),

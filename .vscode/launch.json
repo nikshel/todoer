@@ -3,7 +3,6 @@
         {
             "name": "dev",
             "program": "lib/main.dart",
-            "deviceId": "macos",
             "request": "launch",
             "type": "dart",
             "flutterMode": "debug",
@@ -15,7 +14,6 @@
         {
             "name": "production",
             "program": "lib/main.dart",
-            "deviceId": "macos",
             "request": "launch",
             "type": "dart",
             "flutterMode": "debug",

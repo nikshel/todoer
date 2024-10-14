@@ -18,30 +18,30 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
 
-  # build-windows:
-  #   needs: [get-version]
-  #   runs-on: windows-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #     - name: Install yq
-  #       uses: dcarbone/install-yq-action@v1.1.1
-  #     - name: Setup flutter
-  #       uses: subosito/flutter-action@v2
-  #       with:
-  #         channel: 'stable'
-  #         flutter-version-file: pubspec.yaml
-  #     - name: Install dependencies
-  #       run: flutter pub get
-  #     - name: Build
-  #       run: flutter build windows --release --dart-define-from-file=configs/production.env --build-name=${{ needs.get-version.outputs.version }}
-  #     - name: Create archieve
-  #       run: Compress-Archive -Path ./build/windows/x64/runner/Release/* -Destination todoer-windows.zip
-  #     - name: Upload build artifact
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: release-windows
-  #         path: todoer-windows.zip
+  build-windows:
+    needs: [get-version]
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install yq
+        uses: dcarbone/install-yq-action@v1.1.1
+      - name: Setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version-file: pubspec.yaml
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Build
+        run: flutter build windows --release --dart-define-from-file=configs/production.env --build-name=${{ needs.get-version.outputs.version }}
+      - name: Create archieve
+        run: Compress-Archive -Path ./build/windows/x64/runner/Release/* -Destination todoer-windows.zip
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: todoer-windows.zip
 
   build-macos:
     needs: [get-version]
@@ -143,7 +143,7 @@ jobs:
   release:
     needs:
       - get-version
-      # - build-windows
+      - build-windows
       - build-macos
       # - build-linux
     runs-on: ubuntu-latest
@@ -178,15 +178,15 @@ jobs:
           release_name: Release ${{ needs.get-version.outputs.version }}
           body: ${{ steps.changes.outputs.log }}
 
-      # - name: Upload windows asset
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.create-release.outputs.upload_url }}
-      #     asset_path: ./todoer-windows.zip
-      #     asset_name: todoer-${{ needs.get-version.outputs.version }}-windows.zip
-      #     asset_content_type: application/zip
+      - name: Upload windows asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./todoer-windows.zip
+          asset_name: todoer-${{ needs.get-version.outputs.version }}-windows.zip
+          asset_content_type: application/zip
 
       - name: Upload macos asset
         uses: actions/upload-release-asset@v1
