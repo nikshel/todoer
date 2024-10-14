@@ -1,9 +1,9 @@
-// import 'package:app_links/app_links.dart';
 import 'package:event_bus/event_bus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:todoer/blocs/auth.dart';
 import 'package:todoer/client.dart';
+import 'package:todoer/repositories/local_storage.dart';
 import 'package:todoer/repositories/token.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -32,9 +32,10 @@ void main() async {
 
   var todoerUrl = Uri.parse(const String.fromEnvironment("TODOER_URL"));
   var todoerClient = TodoerClient(todoerUrl.toString());
+  var localStorageRepository = await LocalStorageRepository.create();
 
   runApp(MyApp(
-    treeRepository: TreeRepository(todoerClient),
+    treeRepository: TreeRepository(todoerClient, localStorageRepository),
     tokenRepository: TokenRepository('${todoerUrl.host}:${todoerUrl.port}'),
     todoerClient: todoerClient,
     todoerUrl: todoerUrl,

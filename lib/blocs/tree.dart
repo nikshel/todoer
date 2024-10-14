@@ -17,7 +17,8 @@ class TreeCubit extends Cubit<TreeState> {
   final TreeRepository _repository;
   final EventBus _eventBus;
 
-  TreeCubit(this._repository, this._eventBus) : super(TreeState([], [])) {
+  TreeCubit(this._repository, this._eventBus)
+      : super(TreeState([], _repository.getGroups())) {
     _eventBus.on<AuthEvent>().listen(_onAuthEvent);
   }
 
@@ -34,7 +35,7 @@ class TreeCubit extends Cubit<TreeState> {
         link: link,
         parentId: parentId,
         groups: groups);
-    await _refreshState(tree);
+    await _emitState(tree);
   }
 
   Future<void> updateTask(
@@ -51,34 +52,31 @@ class TreeCubit extends Cubit<TreeState> {
       link: link,
       groups: groups,
     );
-    await _refreshState(tree);
+    await _emitState(tree);
   }
 
   Future<void> setTaskStatus(int taskId, TaskStatus status) async {
     var tree = await _repository.setTaskStatus(taskId, status);
-    _refreshState(tree);
+    _emitState(tree);
   }
 
   Future<void> removeTask(int taskId) async {
     var tree = await _repository.removeTask(taskId);
-    await _refreshState(tree);
+    await _emitState(tree);
   }
 
   Future<void> moveTask(int taskId, int? newParentId, int newIdx) async {
     var tree = await _repository.moveTask(taskId, newParentId, newIdx);
-    await _refreshState(tree);
+    await _emitState(tree);
   }
 
-  _onAuthEvent(AuthEvent event) {
-    if (event.newAuthState.authorized) {
-      _refreshState();
-    } else {
-      emit(TreeState([], []));
-    }
+  _onAuthEvent(AuthEvent event) async {
+    List<Task> roots =
+        event.newAuthState.authorized ? await _repository.getRoots() : [];
+    _emitState(roots);
   }
 
-  Future<void> _refreshState([List<Task>? roots]) async {
-    roots = roots ?? await _repository.getRoots();
+  Future<void> _emitState(List<Task> roots) async {
     var groups = _repository.getGroups();
     emit(TreeState(roots, groups));
   }
