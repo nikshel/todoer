@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:easy_sidemenu/easy_sidemenu.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:vertical_tab_bar_view/vertical_tab_bar_view.dart';
@@ -213,7 +214,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                     ].any((t) => t.groups.contains(group)),
                                   )),
                               const TaskTreePage(),
-                            ],
+                            ]
+                                .map((widget) => RefreshIndicator(
+                                      onRefresh: () => Future.wait([
+                                        HapticFeedback.heavyImpact(),
+                                        context.read<TreeCubit>().updateRoots()
+                                      ]),
+                                      child: widget,
+                                    ))
+                                .toList(),
                           ),
                         ),
                       ],

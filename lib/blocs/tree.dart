@@ -72,15 +72,15 @@ class TreeCubit extends Cubit<TreeState> {
 
   _onAuthEvent(AuthEvent event) async {
     if (event.newAuthState.authorized) {
-      await _updateRoots(allowCached: true);
-      _updateRoots(allowCached: false);
+      await updateRoots(allowCached: true);
+      updateRoots();
     } else {
       await _repository.clearRootsCache();
       _emitState([]);
     }
   }
 
-  _updateRoots({required bool allowCached}) async {
+  Future<void> updateRoots({bool allowCached = false}) async {
     var roots = await _repository.getRoots(allowCached: allowCached);
     _emitState(roots);
   }
