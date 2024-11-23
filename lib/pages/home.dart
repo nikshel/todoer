@@ -54,9 +54,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     GroupSystemType.week: Icons.calendar_month_outlined,
     GroupSystemType.waiting: Icons.hourglass_empty_outlined,
   };
-  static const List<TabBarItem> startTabBarItems = [
-    TabBarItem(Icons.rowing, Icons.rowing_outlined, 'В работе'),
-  ];
+  static const List<TabBarItem> startTabBarItems = [];
   static const List<TabBarItem> endTabBarItems = [
     TabBarItem(Icons.format_list_bulleted, Icons.format_list_bulleted_outlined,
         'Проекты'),
@@ -77,7 +75,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     super.didChangeDependencies();
 
     var groupsCount = context.watch<TreeCubit>().state.groups.length;
-    var tabsCount = 2 + groupsCount;
+    var tabsCount =
+        startTabBarItems.length + groupsCount + endTabBarItems.length;
 
     setState(() {
       currentTabIndex = min(currentTabIndex, tabsCount);
@@ -202,10 +201,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                           child: _makeTabBarView(
                             isVertical: isDesktop,
                             children: [
-                              TaskTreePage(
-                                  isReadOnly: true,
-                                  filter: (task) =>
-                                      task.status == TaskStatus.inWork),
                               ...treeState.groups.map((group) => TaskTreePage(
                                     isReadOnly: true,
                                     filter: (task) => [
