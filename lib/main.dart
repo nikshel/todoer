@@ -37,7 +37,8 @@ void main() async {
     );
   }
 
-  var todoerUrl = Uri.parse(const String.fromEnvironment("TODOER_URL"));
+  var todoerUrl = Uri.parse(const String.fromEnvironment("TODOER_URL",
+      defaultValue: 'https://todoer.nikshel.ru'));
   var todoerClient = TodoerClient(todoerUrl.toString());
   var localStorageRepository = await LocalStorageRepository.create();
 
