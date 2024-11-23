@@ -218,7 +218,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                         ),
                       ],
                     )),
-        bottomNavigationBar: isDesktop
+        bottomNavigationBar: isDesktop || !authState.authorized
             ? null
             : BlocBuilder<TreeCubit, TreeState>(
                 builder: (context, treeState) => NavigationBar(
