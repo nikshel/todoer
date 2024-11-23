@@ -130,6 +130,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             child: PageView(
                               controller: pageController,
                               scrollDirection: Axis.vertical,
+                              physics: const NeverScrollableScrollPhysics(),
                               children: [
                                 TaskTreePage(
                                   isReadOnly: true,
