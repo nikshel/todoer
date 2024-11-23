@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:easy_sidemenu/easy_sidemenu.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -11,19 +10,16 @@ import 'package:todoer/utils.dart';
 import 'package:todoer/blocs/auth.dart';
 import 'package:todoer/blocs/tree.dart';
 import 'package:todoer/models/group.dart';
-import 'package:todoer/models/task.dart';
 import 'package:todoer/pages/login.dart';
 import 'package:todoer/pages/task_tree.dart';
 import 'package:todoer/widgets/update_checker.dart';
 
 class TabBarItem {
   final IconData icon;
-  final IconData selectedIcon;
   final String title;
 
   const TabBarItem(
     this.icon,
-    this.selectedIcon,
     this.title,
   );
 }
@@ -40,7 +36,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   late TabController tabController;
   int currentTabIndex = 0;
-  SideMenuController sideMenuController = SideMenuController();
 
   String appVersion = '';
 
@@ -49,20 +44,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     GroupSystemType.week: Icons.calendar_month,
     GroupSystemType.waiting: Icons.hourglass_empty,
   };
-  static const Map<GroupSystemType, IconData> groupSelecterIcons = {
-    GroupSystemType.today: Icons.today_outlined,
-    GroupSystemType.week: Icons.calendar_month_outlined,
-    GroupSystemType.waiting: Icons.hourglass_empty_outlined,
-  };
   static const List<TabBarItem> startTabBarItems = [];
   static const List<TabBarItem> endTabBarItems = [
-    TabBarItem(Icons.format_list_bulleted, Icons.format_list_bulleted_outlined,
-        'Проекты'),
+    TabBarItem(Icons.format_list_bulleted, 'Проекты'),
   ];
 
   @override
   void initState() {
-    sideMenuController.addListener(_switchTab);
     super.initState();
 
     PackageInfo.fromPlatform().then((info) => setState(() {
@@ -141,7 +129,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       ...startTabBarItems,
       ...context.read<TreeCubit>().state.groups.map((group) => TabBarItem(
             groupIcons[group.systemType]!,
-            groupSelecterIcons[group.systemType]!,
             group.title,
           )),
       ...endTabBarItems
@@ -173,33 +160,27 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 builder: (context, treeState) => Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        if (isDesktop)
-                          SideMenu(
-                            controller: sideMenuController,
-                            style: SideMenuStyle(
-                              openSideMenuWidth: 150,
-                              displayMode: SideMenuDisplayMode.auto,
-                              hoverColor: Colors.green[100],
-                              selectedColor: Colors.green,
-                              selectedTitleTextStyle:
-                                  const TextStyle(color: Colors.white),
-                              selectedIconColor: Colors.white,
-                            ),
-                            items: _getTabBarItems()
-                                .map(
-                                  (item) => SideMenuItem(
-                                    title: item.title,
-                                    onTap: (index, _) {
-                                      sideMenuController.changePage(index);
-                                    },
-                                    icon: Icon(item.icon),
-                                  ),
-                                )
+                        if (isLandscape(context))
+                          NavigationRail(
+                            onDestinationSelected: _switchTab,
+                            selectedIndex: currentTabIndex,
+                            labelType: NavigationRailLabelType.all,
+                            backgroundColor: const Color(0xffecefe6),
+                            destinations: _getTabBarItems()
+                                .map((item) => NavigationRailDestination(
+                                      icon: Icon(item.icon, size: 30),
+                                      label: Text(item.title),
+                                      padding: const EdgeInsets.only(
+                                        top: 5,
+                                        bottom: 5,
+                                      ),
+                                    ))
                                 .toList(),
                           ),
+                        // const VerticalDivider(width: 1, thickness: 1),
                         Expanded(
                           child: _makeTabBarView(
-                            isVertical: isDesktop,
+                            isVertical: isLandscape(context),
                             children: [
                               ...treeState.groups.map((group) => TaskTreePage(
                                     isReadOnly: true,
@@ -222,7 +203,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                         ),
                       ],
                     )),
-        bottomNavigationBar: isDesktop || !authState.authorized
+        bottomNavigationBar: isLandscape(context) || !authState.authorized
             ? null
             : BlocBuilder<TreeCubit, TreeState>(
                 builder: (context, treeState) => NavigationBar(
@@ -232,7 +213,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                           .map((item) => NavigationDestination(
                                 label: item.title,
                                 icon: Icon(item.icon),
-                                selectedIcon: Icon(item.selectedIcon),
                               ))
                           .toList(),
                     )),
