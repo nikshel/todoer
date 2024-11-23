@@ -12,19 +12,27 @@ class TreeRepository {
     Group(id: 3, title: 'Ожидание', systemType: GroupSystemType.waiting),
   ];
 
+  static const String _cacheKey = 'tasktree';
+
   final TodoerClient _client;
   final LocalStorageRepository _localStorage;
 
   TreeRepository(this._client, this._localStorage);
 
-  Future<List<Task>> getRoots() async {
-    var cachedTree = await _getCachedRoots();
-    if (cachedTree != null) {
-      return cachedTree;
+  Future<List<Task>> getRoots({required bool allowCached}) async {
+    if (allowCached) {
+      var cachedTree = await _getCachedRoots();
+      if (cachedTree != null) {
+        return cachedTree;
+      }
     }
 
     var tree = await _client.getTasksTree();
     return _processTreeResponse(tree);
+  }
+
+  clearRootsCache() async {
+    _localStorage.deleteCacehedValue(_cacheKey);
   }
 
   Future<List<Task>> createTask({
@@ -96,7 +104,7 @@ class TreeRepository {
 
   List<Task> _processTreeResponse(List<dynamic> rawTasks) {
     var tree = _parseTree(rawTasks);
-    _localStorage.setCachedValue('tasktree', rawTasks);
+    _localStorage.setCachedValue(_cacheKey, rawTasks);
     return tree;
   }
 

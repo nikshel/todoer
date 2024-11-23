@@ -23,4 +23,8 @@ class LocalStorageRepository {
   setCachedValue(String key, dynamic value) async {
     await _cacheBox.put(key, value);
   }
+
+  deleteCacehedValue(String key) async {
+    await _cacheBox.delete(key);
+  }
 }
