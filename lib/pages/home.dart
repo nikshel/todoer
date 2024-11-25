@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:vertical_tab_bar_view/vertical_tab_bar_view.dart';
 
 import 'package:todoer/utils.dart';
 import 'package:todoer/blocs/auth.dart';
@@ -13,6 +12,7 @@ import 'package:todoer/models/group.dart';
 import 'package:todoer/pages/login.dart';
 import 'package:todoer/pages/task_tree.dart';
 import 'package:todoer/widgets/update_checker.dart';
+import 'package:todoer/contrib/vertical_tab_bar_view/vertical_tab_bar_view.dart';
 
 class TabBarItem {
   final IconData icon;
