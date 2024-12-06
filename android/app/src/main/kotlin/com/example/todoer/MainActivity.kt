@@ -1,4 +1,4 @@
-package com.example.todoer
+package ru.nikshel.todoer
 
 import io.flutter.embedding.android.FlutterActivity
 

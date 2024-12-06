@@ -104,6 +104,35 @@ jobs:
           name: release-macos
           path: todoer-macos.dmg
 
+  build-android:
+    needs: [get-version]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install yq
+        uses: dcarbone/install-yq-action@v1.1.1
+      - name: Setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version-file: pubspec.yaml
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: flutter doctor -v
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Build
+        run: flutter build apk --release --dart-define-from-file=configs/production.env --build-name=${{ needs.get-version.outputs.version }}
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-android
+          path: build/app/outputs/flutter-apk/app-release.apk
+
   # build-linux:
   #   needs: [get-version]
   #   runs-on: ubuntu-latest
@@ -145,6 +174,7 @@ jobs:
       - get-version
       - build-windows
       - build-macos
+      - build-android
       # - build-linux
     runs-on: ubuntu-latest
     permissions:
@@ -196,6 +226,16 @@ jobs:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: ./todoer-macos.dmg
           asset_name: todoer-${{ needs.get-version.outputs.version }}-macos.dmg
+          asset_content_type: application/octet-stream
+
+      - name: Upload android asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./app-release.apk
+          asset_name: todoer-${{ needs.get-version.outputs.version }}-android.apk
           asset_content_type: application/octet-stream
 
       # - name: Upload linux asset
