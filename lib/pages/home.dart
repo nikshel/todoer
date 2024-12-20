@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:todoer/models/task.dart';
 
 import 'package:todoer/utils.dart';
 import 'package:todoer/blocs/auth.dart';
@@ -36,6 +37,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   late TabController tabController;
   int currentTabIndex = 0;
+  bool showDone = true;
+  Key someKey = UniqueKey();
 
   String appVersion = '';
 
@@ -177,28 +180,67 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                     ))
                                 .toList(),
                           ),
-                        // const VerticalDivider(width: 1, thickness: 1),
                         Expanded(
-                          child: _makeTabBarView(
-                            isVertical: isLandscape(context),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              ...treeState.groups.map((group) => TaskTreePage(
-                                    isReadOnly: true,
-                                    filter: (task) => [
-                                      task,
-                                      ...task.getAllParents()
-                                    ].any((t) => t.groups.contains(group)),
-                                  )),
-                              const TaskTreePage(),
-                            ]
-                                .map((widget) => RefreshIndicator(
-                                      onRefresh: () => Future.wait([
-                                        HapticFeedback.heavyImpact(),
-                                        context.read<TreeCubit>().updateRoots()
-                                      ]),
-                                      child: widget,
-                                    ))
-                                .toList(),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  const Padding(
+                                    padding: EdgeInsets.only(left: 10),
+                                    child: Text('Показать сделанные'),
+                                  ),
+                                  Transform.scale(
+                                    scale: 0.8,
+                                    child: Switch(
+                                        value: showDone,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            showDone = value;
+                                          });
+                                        }),
+                                  ),
+                                ],
+                              ),
+                              const Divider(thickness: 1, height: 1),
+                              Expanded(
+                                child: _makeTabBarView(
+                                  isVertical: isLandscape(context),
+                                  children: [
+                                    ...treeState.groups
+                                        .map((group) => TaskTreePage(
+                                              key: UniqueKey(),
+                                              isReadOnly: true,
+                                              filter: (task) =>
+                                                  (showDone ||
+                                                      task.status !=
+                                                          TaskStatus.done) &&
+                                                  [
+                                                    task,
+                                                    ...task.getAllParents()
+                                                  ].any((t) =>
+                                                      t.groups.contains(group)),
+                                            )),
+                                    TaskTreePage(
+                                        key: UniqueKey(),
+                                        filter: (task) =>
+                                            showDone ||
+                                            task.status != TaskStatus.done),
+                                  ]
+                                      .map((widget) => RefreshIndicator(
+                                            onRefresh: () => Future.wait([
+                                              HapticFeedback.heavyImpact(),
+                                              context
+                                                  .read<TreeCubit>()
+                                                  .updateRoots()
+                                            ]),
+                                            child: widget,
+                                          ))
+                                      .toList(),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
