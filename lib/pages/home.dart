@@ -37,8 +37,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   late TabController tabController;
   int currentTabIndex = 0;
-  bool showDone = true;
-  Key someKey = UniqueKey();
+  bool showDone = false;
 
   String appVersion = '';
 
@@ -189,15 +188,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                 children: [
                                   const Padding(
                                     padding: EdgeInsets.only(left: 10),
-                                    child: Text('Показать сделанные'),
+                                    child: Text('Скрыть сделанные'),
                                   ),
                                   Transform.scale(
                                     scale: 0.8,
                                     child: Switch(
-                                        value: showDone,
+                                        value: !showDone,
                                         onChanged: (value) {
                                           setState(() {
-                                            showDone = value;
+                                            showDone = !value;
                                           });
                                         }),
                                   ),
@@ -210,7 +209,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                   children: [
                                     ...treeState.groups
                                         .map((group) => TaskTreePage(
-                                              key: UniqueKey(),
                                               isReadOnly: true,
                                               filter: (task) =>
                                                   (showDone ||
@@ -223,7 +221,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                                       t.groups.contains(group)),
                                             )),
                                     TaskTreePage(
-                                        key: UniqueKey(),
                                         filter: (task) =>
                                             showDone ||
                                             task.status != TaskStatus.done),

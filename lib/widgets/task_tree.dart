@@ -45,6 +45,12 @@ class _TaskTreeViewState extends State<TaskTreeView> {
   }
 
   @override
+  void didUpdateWidget(TaskTreeView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    treeController.rebuild();
+  }
+
+  @override
   Future<void> didChangeDependencies() async {
     super.didChangeDependencies();
 

@@ -32,7 +32,7 @@ class TreeRepository {
   }
 
   clearRootsCache() async {
-    _localStorage.deleteCacehedValue(_cacheKey);
+    _localStorage.deleteCachedValue(_cacheKey);
   }
 
   Future<List<Task>> createTask({
