@@ -150,92 +150,88 @@ class TreeTile extends StatelessWidget {
         TreeTileMenuOption.remove =>
           onAction!(TreeTileAction.removePressed, entry.node),
       }),
-      builder: (context, openMenu) => Padding(
-        padding: const EdgeInsetsDirectional.only(end: 8),
-        child: Row(
-          children: [
-            IconButton(
-                constraints: const BoxConstraints(),
-                padding: const EdgeInsets.all(4),
-                icon: Icon(icons[entry.node.status]),
-                color:
-                    entry.node.status == TaskStatus.inWork ? Colors.blue : null,
-                onPressed: onAction == null
-                    ? null
-                    : () => onAction!(
-                        TreeTileAction.statusSwitchPressed, entry.node)),
-            if (entry.node.isProject)
-              const Padding(
-                padding: EdgeInsets.only(left: 3, right: 7),
-                child: Icon(Icons.folder),
-              ),
-            if (entry.node.groups
-                .any((g) => g.systemType == GroupSystemType.waiting))
-              const Icon(Icons.hourglass_empty, size: 20),
-            Expanded(
-              child: GestureDetector(
-                onTap: () =>
-                    onAction!(TreeTileAction.expandPressed, entry.node),
-                onDoubleTap: () => onAction == null
-                    ? null
-                    : onAction!(TreeTileAction.editPressed, entry.node),
-                behavior: HitTestBehavior.translucent,
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        entry.node.title,
-                        style: TextStyle(
-                            fontSize: 15,
-                            decoration: entry.node.status == TaskStatus.done
-                                ? TextDecoration.lineThrough
-                                : null,
-                            color: entry.node.status == TaskStatus.done
-                                ? Colors.grey
-                                : null),
-                      ),
+      builder: (context, openMenu) => Row(
+        children: [
+          IconButton(
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(4),
+              icon: Icon(icons[entry.node.status]),
+              color:
+                  entry.node.status == TaskStatus.inWork ? Colors.blue : null,
+              onPressed: onAction == null
+                  ? null
+                  : () => onAction!(
+                      TreeTileAction.statusSwitchPressed, entry.node)),
+          if (entry.node.isProject)
+            const Padding(
+              padding: EdgeInsets.only(left: 3, right: 7),
+              child: Icon(Icons.folder),
+            ),
+          if (entry.node.groups
+              .any((g) => g.systemType == GroupSystemType.waiting))
+            const Icon(Icons.hourglass_empty, size: 20),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => onAction!(TreeTileAction.expandPressed, entry.node),
+              onDoubleTap: () => onAction == null
+                  ? null
+                  : onAction!(TreeTileAction.editPressed, entry.node),
+              behavior: HitTestBehavior.translucent,
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Flexible(
+                    child: Text(
+                      entry.node.title,
+                      style: TextStyle(
+                          fontSize: 15,
+                          decoration: entry.node.status == TaskStatus.done
+                              ? TextDecoration.lineThrough
+                              : null,
+                          color: entry.node.status == TaskStatus.done
+                              ? Colors.grey
+                              : null),
                     ),
-                    if (!entry.node.isLeaf)
-                      FolderButton(
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.all(3),
-                        openedIcon: const Icon(Icons.expand_more),
-                        closedIcon: const Icon(Icons.chevron_right),
-                        isOpen: entry.node.isLeaf ? null : entry.isExpanded,
-                        onPressed: () =>
-                            onAction!(TreeTileAction.expandPressed, entry.node),
-                      ),
-                  ],
-                ),
+                  ),
+                  if (!entry.node.isLeaf)
+                    FolderButton(
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(3),
+                      openedIcon: const Icon(Icons.expand_more),
+                      closedIcon: const Icon(Icons.chevron_right),
+                      isOpen: entry.node.isLeaf ? null : entry.isExpanded,
+                      onPressed: () =>
+                          onAction!(TreeTileAction.expandPressed, entry.node),
+                    ),
+                ],
               ),
             ),
-            if (entry.node.link != null)
-              IconButton(
+          ),
+          if (entry.node.link != null)
+            IconButton(
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(3),
+              onPressed: () => launchUrlString(
+                entry.node.link!,
+                mode: LaunchMode.platformDefault,
+              ),
+              icon: const Icon(Icons.link),
+            ),
+          if (!isDesktop)
+            Builder(
+              builder: (currentContext) => IconButton(
                 constraints: const BoxConstraints(),
                 padding: const EdgeInsets.all(3),
-                onPressed: () => launchUrlString(
-                  entry.node.link!,
-                  mode: LaunchMode.platformDefault,
-                ),
-                icon: const Icon(Icons.link),
+                onPressed: () => openMenu(_getRelativeOffset(
+                  currentContext,
+                  context,
+                  const Offset(0, 30),
+                )),
+                icon: const Icon(Icons.more_vert),
               ),
-            if (!isDesktop)
-              Builder(
-                builder: (currentContext) => IconButton(
-                  constraints: const BoxConstraints(),
-                  padding: const EdgeInsets.all(3),
-                  onPressed: () => openMenu(_getRelativeOffset(
-                    currentContext,
-                    context,
-                    const Offset(0, 30),
-                  )),
-                  icon: const Icon(Icons.more_vert),
-                ),
-              )
-          ],
-        ),
+            )
+        ],
       ),
     );
 
@@ -246,10 +242,30 @@ class TreeTile extends StatelessWidget {
       );
     }
 
+    if (isDesktop) {
+      content = Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: content,
+      );
+    }
+
+    if (!isDesktop) {
+      content = Theme(
+        data: Theme.of(context).copyWith(
+          iconButtonTheme: IconButtonThemeData(
+            style: IconButton.styleFrom(
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        ),
+        child: content,
+      );
+    }
+
     if (showIndentation) {
       return TreeIndentation(
         entry: entry,
-        guide: const ConnectingLinesGuide(indent: 33),
+        guide: const ConnectingLinesGuide(indent: 30),
         child: content,
       );
     }
