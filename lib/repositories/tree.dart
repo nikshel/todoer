@@ -79,6 +79,11 @@ class TreeRepository {
     return _processTreeResponse(tree);
   }
 
+  Future<List<Task>> removeAllDoneTasks() async {
+    var tree = await _client.deleteAllDoneTasks();
+    return _processTreeResponse(tree);
+  }
+
   Future<List<Task>> moveTask(int taskId, int? newParentId, int newIdx) async {
     var tree = await _client.moveTask(taskId, newParentId, newIdx);
     return _processTreeResponse(tree);

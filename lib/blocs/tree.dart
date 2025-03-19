@@ -65,6 +65,11 @@ class TreeCubit extends Cubit<TreeState> {
     await _emitState(tree);
   }
 
+  Future<void> removeAllDoneTasks() async {
+    var tree = await _repository.removeAllDoneTasks();
+    await _emitState(tree);
+  }
+
   Future<void> moveTask(int taskId, int? newParentId, int newIdx) async {
     var tree = await _repository.moveTask(taskId, newParentId, newIdx);
     await _emitState(tree);

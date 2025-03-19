@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:native_dio_adapter/native_dio_adapter.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
+import 'package:todoer/models/task.dart';
 
 class TodoerClient {
   final Dio _dio;
@@ -95,6 +96,14 @@ class TodoerClient {
       'DELETE',
       "/tasks/$id/",
       queryParams: {"get_list": "1"},
+    );
+  }
+
+  Future<List<dynamic>> deleteAllDoneTasks() async {
+    return await _request(
+      'DELETE',
+      '/tasks/batch/',
+      queryParams: {"status": TaskStatus.done.name, "get_list": "1"},
     );
   }
 

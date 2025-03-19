@@ -14,6 +14,11 @@ import 'package:todoer/pages/login.dart';
 import 'package:todoer/pages/task_tree.dart';
 import 'package:todoer/widgets/update_checker.dart';
 import 'package:todoer/contrib/vertical_tab_bar_view/vertical_tab_bar_view.dart';
+import 'package:todoer/widgets/menuable.dart';
+
+enum HomeMenuOption {
+  deleteDone,
+}
 
 class TabBarItem {
   final IconData icon;
@@ -98,6 +103,30 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                     child: const Text('OK'))
               ],
             ));
+  }
+
+  void _showDeleteDoneTasksDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Подтверждение'),
+        content:
+            const Text('Вы уверены, что хотите удалить все сделанные задачи?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<TreeCubit>().removeAllDoneTasks();
+              Navigator.pop(dialogContext);
+            },
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _makeTabBarView(
@@ -199,6 +228,25 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                             showDone = !value;
                                           });
                                         }),
+                                  ),
+                                  Menuable<HomeMenuOption>(
+                                    options: const [
+                                      (
+                                        HomeMenuOption.deleteDone,
+                                        Icons.delete,
+                                        'Удалить сделанные'
+                                      ),
+                                    ],
+                                    onOptionSelected: (option) {
+                                      if (option == HomeMenuOption.deleteDone) {
+                                        _showDeleteDoneTasksDialog(context);
+                                      }
+                                    },
+                                    builder: (context, openMenu) => IconButton(
+                                      icon: const Icon(Icons.more_vert),
+                                      onPressed: () =>
+                                          openMenu(const Offset(0, 30)),
+                                    ),
                                   ),
                                 ],
                               ),
