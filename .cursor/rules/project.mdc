@@ -1,0 +1,9 @@
+---
+alwaysApply: true
+---
+
+- This is todo application called Todoer written in Flutter
+- Main functionality is management of hierarchial tasks tree
+- It uses REST API to store tasks and other data
+- It has standard Flutter project structure
+- It uses BLoC patter and library for state management

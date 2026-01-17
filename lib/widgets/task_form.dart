@@ -74,7 +74,7 @@ class _TaskFormState extends State<TaskForm> {
               title: const Text('Сделать проектом'),
               initialValue: widget.currentTask?.isProject ?? false,
             ),
-            FormBuilderFilterChip<Group>(
+            FormBuilderFilterChips<Group>(
               name: 'groups',
               showCheckmark: false,
               options: widget.groups
@@ -100,6 +100,7 @@ class _TaskFormState extends State<TaskForm> {
                 requireTld: true,
                 allowUnderscore: true,
                 requireProtocol: true,
+                checkNullOrEmpty: false,
               ),
               textInputAction: TextInputAction.send,
               valueTransformer: (value) => value?.trim() ?? '',
