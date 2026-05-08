@@ -74,7 +74,7 @@ class _TaskFormState extends State<TaskForm> {
               title: const Text('Сделать проектом'),
               initialValue: widget.currentTask?.isProject ?? false,
             ),
-            FormBuilderFilterChip<Group>(
+            FormBuilderFilterChips<Group>(
               name: 'groups',
               showCheckmark: false,
               options: widget.groups
@@ -100,9 +100,13 @@ class _TaskFormState extends State<TaskForm> {
                 requireTld: true,
                 allowUnderscore: true,
                 requireProtocol: true,
+                checkNullOrEmpty: false,
               ),
               textInputAction: TextInputAction.send,
-              valueTransformer: (value) => value?.trim() ?? '',
+              valueTransformer: (value) {
+                final String trimmedValue = value?.trim() ?? '';
+                return trimmedValue.isEmpty ? null : trimmedValue;
+              },
               initialValue: widget.currentTask?.link,
             ),
             const SizedBox(
@@ -146,10 +150,6 @@ class _TaskFormState extends State<TaskForm> {
       var isValid = _formKey.currentState!.saveAndValidate();
       if (isValid) {
         var values = {..._formKey.currentState!.value};
-
-        if (values['link'] == '') {
-          values['link'] = null;
-        }
 
         values['groups'] = ((values['groups'] as List<int>?) ?? [])
             .map((id) => widget.groups.firstWhere((g) => g.id == id))

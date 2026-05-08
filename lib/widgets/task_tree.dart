@@ -127,8 +127,6 @@ class _TaskTreeViewState extends State<TaskTreeView> {
       case TreeTileAction.removePressed:
         await treeCubit.removeTask(task.id);
 
-      default:
-        throw Exception('Unknown action $action');
     }
   }
 

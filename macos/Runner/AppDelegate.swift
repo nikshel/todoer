@@ -3,7 +3,7 @@ import FlutterMacOS
 
 import app_links
 
-@NSApplicationMain
+@main
 class AppDelegate: FlutterAppDelegate {
     public override func application(
         _ application: NSApplication,
