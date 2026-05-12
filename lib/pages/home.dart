@@ -11,6 +11,7 @@ import 'package:todoer/blocs/auth.dart';
 import 'package:todoer/blocs/tree.dart';
 import 'package:todoer/models/group.dart';
 import 'package:todoer/pages/login.dart';
+import 'package:todoer/pages/notes.dart';
 import 'package:todoer/pages/task_tree.dart';
 import 'package:todoer/widgets/update_checker.dart';
 import 'package:todoer/contrib/vertical_tab_bar_view/vertical_tab_bar_view.dart';
@@ -53,6 +54,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   };
   static const List<TabBarItem> startTabBarItems = [];
   static const List<TabBarItem> endTabBarItems = [
+    TabBarItem(Icons.description_outlined, 'Заметки'),
     TabBarItem(Icons.format_list_bulleted, 'Проекты'),
   ];
 
@@ -252,37 +254,41 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                               ),
                               const Divider(thickness: 1, height: 1),
                               Expanded(
-                                child: _makeTabBarView(
-                                  isVertical: isLandscape(context),
-                                  children: [
-                                    ...treeState.groups
-                                        .map((group) => TaskTreePage(
-                                              isReadOnly: true,
-                                              filter: (task) =>
-                                                  (showDone ||
-                                                      task.status !=
-                                                          TaskStatus.done) &&
-                                                  [
-                                                    task,
-                                                    ...task.getAllParents()
-                                                  ].any((t) =>
-                                                      t.groups.contains(group)),
-                                            )),
-                                    TaskTreePage(
-                                        filter: (task) =>
-                                            showDone ||
-                                            task.status != TaskStatus.done),
-                                  ]
-                                      .map((widget) => RefreshIndicator(
-                                            onRefresh: () => Future.wait([
-                                              HapticFeedback.heavyImpact(),
-                                              context
-                                                  .read<TreeCubit>()
-                                                  .updateRoots()
-                                            ]),
-                                            child: widget,
-                                          ))
-                                      .toList(),
+                                child: ClipRect(
+                                  child: _makeTabBarView(
+                                    isVertical: isLandscape(context),
+                                    children: [
+                                      ...treeState.groups
+                                          .map((group) => TaskTreePage(
+                                                isReadOnly: true,
+                                                filter: (task) =>
+                                                    (showDone ||
+                                                        task.status !=
+                                                            TaskStatus.done) &&
+                                                    [
+                                                      task,
+                                                      ...task.getAllParents()
+                                                    ].any((t) =>
+                                                        t.groups
+                                                            .contains(group)),
+                                              )),
+                                      const NotesPage(),
+                                      TaskTreePage(
+                                          filter: (task) =>
+                                              showDone ||
+                                              task.status != TaskStatus.done),
+                                    ]
+                                        .map((widget) => RefreshIndicator(
+                                              onRefresh: () => Future.wait([
+                                                HapticFeedback.heavyImpact(),
+                                                context
+                                                    .read<TreeCubit>()
+                                                    .updateRoots()
+                                              ]),
+                                              child: widget,
+                                            ))
+                                        .toList(),
+                                  ),
                                 ),
                               ),
                             ],

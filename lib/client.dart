@@ -99,6 +99,43 @@ class TodoerClient {
     );
   }
 
+  Future<List<dynamic>> getNotes() async {
+    return await _request<List<dynamic>>('GET', '/notes/');
+  }
+
+  Future<Map<String, dynamic>> createNote({
+    required String title,
+    required String content,
+  }) async {
+    return await _request(
+      'POST',
+      '/notes/',
+      data: {
+        'title': title,
+        'content': content,
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> updateNote(
+    int id, {
+    required String title,
+    required String content,
+  }) async {
+    return await _request(
+      'PATCH',
+      '/notes/$id/',
+      data: {
+        'title': title,
+        'content': content,
+      },
+    );
+  }
+
+  Future<void> deleteNote(int id) async {
+    await _request<dynamic>('DELETE', '/notes/$id/');
+  }
+
   Future<List<dynamic>> deleteAllDoneTasks() async {
     return await _request(
       'DELETE',
